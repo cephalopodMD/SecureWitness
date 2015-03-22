@@ -1,5 +1,5 @@
 """
-Django settings for untitled1 project.
+Django settings for app project.
 
 For more information on this file, see
 https://docs.djangoproject.com/en/1.7/topics/settings/
@@ -48,9 +48,9 @@ MIDDLEWARE_CLASSES = (
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 )
 
-ROOT_URLCONF = 'untitled1.urls'
+ROOT_URLCONF = 'app.urls'
 
-WSGI_APPLICATION = 'untitled1.wsgi.application'
+WSGI_APPLICATION = 'app.wsgi.application'
 
 
 # Database

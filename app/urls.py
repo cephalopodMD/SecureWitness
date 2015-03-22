@@ -3,8 +3,10 @@ from django.contrib import admin
 
 urlpatterns = patterns('',
     # Examples:
-    # url(r'^$', 'untitled1.views.home', name='home'),
+    # url(r'^$', 'app.views.home', name='home'),
     # url(r'^blog/', include('blog.urls')),
 
     url(r'^admin/', include(admin.site.urls)),
+    url(r'^$', 'app.views.home', name='home'),
+    url(r'^submit/', 'app.views.submit', name='submit'),
 )
