@@ -7,3 +7,8 @@ def index(request):
     context = RequestContext(request)
     context_dict = {}
     return render_to_response('index.html', context_dict, context)
+
+def favicon(request):
+    context = RequestContext(request)
+    context_dict = {}
+    return render_to_response('favicon.png', context_dict, context)

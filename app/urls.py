@@ -8,5 +8,6 @@ urlpatterns = patterns('',
 
     url(r'^admin/', include(admin.site.urls)),
     url(r'^$', 'app.views.index', name='index'),
+    url(r'^favicon\.ico', 'app.views.favicon', name='favicon'),
     url(r'^submit/', 'app.views.submit', name='submit'),
 )
