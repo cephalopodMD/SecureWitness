@@ -10,9 +10,6 @@ class UserForm(forms.ModelForm):
         fields = ('username', 'email', 'password')
 
 class ReportForm(forms.ModelForm):
-    # User - not included in form
-    # Timestamp - included in form but hidden from view
-    timestamp = forms.DateTimeField('Date created')
     # Short description
     shortDesc = forms.CharField(max_length=128, help_text="Please enter a short description.")
     # Detailed description
@@ -20,4 +17,4 @@ class ReportForm(forms.ModelForm):
     
     class Meta:
         model = Report
-        exclude = ('user',)
+        exclude = ('user','timestamp',)

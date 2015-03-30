@@ -7,7 +7,7 @@
     <body>
         <h1>File a Report</h1>
 
-        <form id="report_form" method="post" action="/app/user/{{user.username}}/">
+        <form id="report_form" method="post" action="/app/user/{{user.username}}/add_report/">
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}
