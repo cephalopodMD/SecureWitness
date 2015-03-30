@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SecureWitness</title>
+    </head>
+
+    <body>
+        <!-- Displays the user's username as a header -->
+        <h1>{{ username }}</h1>
+        <a href="/app/user/{{ username }}/add_report/">File a New Report</a><br />
+        {% if reports %}
+            <ul>
+                {% for report in reports %}
+                <li>
+                    <p>{{report.shortDesc}}</p>
+                    <p>{{report.detailedDesc}}</p>
+                    <p>{{report.timestamp}}</p>
+                </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <strong>No reports currently associated with user.</strong>
+        {% endif %}
+    </body>
+</html>
