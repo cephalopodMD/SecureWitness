@@ -9,6 +9,7 @@
             <h1>Welcome back, {{user.username}}</h1>
             <a href="/app/user/{{user.username}}/">View your homepage</a><br />
             <a href="/app/logout/">Logout</a><br />
+            <a href="/app/user/{{user.username}}/delete_account/">Delete your account</a><br />
         {% else %}
             <h1>Welcome to SecureWitness</h1>
             <a href="/app/login/">Login to SecureWitness</a><br />
