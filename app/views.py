@@ -103,6 +103,24 @@ def user_logout(request):
     return HttpResponseRedirect('/app/')
 
 @login_required
+def delete_account(request, user_name_slug):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+
+    # Check if the requested home page belongs to the current user
+    if currUser.username != user_name_slug:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    # Set the user's account to inactive
+    currUser.is_active = False
+    currUser.save();
+
+   # Log the user out of their account
+    return user_logout(request)
+
+@login_required
 def user(request, user_name_slug):
 
     # Obtain information about the user attempting to view the page
@@ -148,7 +166,7 @@ def add_report(request, user_name_slug):
             report = form.save(commit=False)
             # Set the user and timestamp
             report.user = currUser
-            report.timestamp = datetime.now()
+            report.timeCreated = datetime.now()
             # Other information should already be created
             report.save()
             return user(request, user_name_slug)

@@ -7,19 +7,29 @@
     <body>
         <!-- Displays the user's username as a header -->
         <h1>{{ username }}</h1>
-        <a href="/app/user/{{ username }}/add_report/">File a New Report</a><br />
+        <p>
+            <a href="/app/">Home</a>
+             |
+            <a href="/app/logout/">Logout</a>
+        </p>
+        <p>
+            <a href="/app/user/{{ username }}/add_report/">File a New Report</a>
+             |
+            <a href="ADD_LINK">Edit an existing report</a>
+        </p>
         {% if reports %}
             <ul>
                 {% for report in reports %}
                 <li>
-                    <p>{{report.shortDesc}}</p>
-                    <p>{{report.detailedDesc}}</p>
-                    <p>{{report.timestamp}}</p>
+                    <p><strong>Short description:</strong> {{report.shortDesc}}</p>
+                    <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
+                    <p><strong>Location:</strong> {{report.location}}</p>
+                    <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
                 </li>
                 {% endfor %}
             </ul>
         {% else %}
-            <strong>No reports currently associated with user.</strong>
+            <p><strong>You haven't yet created any reports.</strong></p>
         {% endif %}
     </body>
 </html>
