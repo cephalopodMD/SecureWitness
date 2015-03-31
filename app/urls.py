@@ -9,4 +9,5 @@ urlpatterns = patterns('',
     url(r'^logout/$', views.user_logout, name='logout'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/$', views.user, name='user'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),
+    url(r'^report/([0-9]*)/report/$', views.report, name='report'),
 )

@@ -3,9 +3,9 @@ from django.db import models
 
 class Report(models.Model):
     user = models.ForeignKey(User)
-    timestamp = models.DateTimeField('Date created')
+    timestamp = models.DateTimeField(auto_now=True)
     shortDesc = models.CharField(max_length=128)
-    detailedDesc = models.CharField(max_length=128)
+    detailedDesc = models.CharField(max_length=128, null=True)
     # Optional location
     # Optional date of incident
     # Optional keywords
