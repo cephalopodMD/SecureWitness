@@ -6,14 +6,11 @@
 
     <body>
         <!-- Displays the user's username as a header -->
-        <h1>{{ username }}</h1>
         {% if report %}
-            <li>
-                <p>{{report.shortDesc}}</p>
-                <p>{{report.detailedDesc}}</p>
-                <p>{{report.location}}</p>
-                <p>{{report.timestamp}}</p>
-            </li>
+            <h1>{{ report.shortDesc }}</h1>
+            <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
+            <p><strong>Location:</strong> {{report.location}}</p>
+            <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
             <a href="/app/group/{{ report.id }}/delete">Delete Report</a><br />
         {% else %}
             <strong>Report not hosted in database.</strong>

@@ -152,12 +152,12 @@ def report(request, report_slug):
 
     # Obtain information about the user attempting to view the page
     currUser = request.user
-    report = Report.objects.filter(id=report_slug)
+    report = Report.objects.filter(id=report_slug).first()
 
     # Check if the requested home page belongs to the current user
-    if currUser != report.user:
+    if currUser.id != report.user.id:
         # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
+        return HttpResponse("You are not authorized to manage this report")
 
     # Create a context dictionary which we can pass to the template
     context_dict = {}

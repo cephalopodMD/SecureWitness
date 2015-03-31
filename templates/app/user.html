@@ -14,8 +14,6 @@
         </p>
         <p>
             <a href="/app/user/{{ username }}/add_report/">File a New Report</a>
-             |
-            <a href="ADD_LINK">Edit an existing report</a>
         </p>
         {% if reports %}
             <ul>
@@ -25,6 +23,7 @@
                     <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
                     <p><strong>Location:</strong> {{report.location}}</p>
                     <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
+                    <a href="/app/report/{{ report.id }}/">Edit an existing report</a>
                 </li>
                 {% endfor %}
             </ul>
