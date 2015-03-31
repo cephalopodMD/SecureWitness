@@ -148,6 +148,30 @@ def user(request, user_name_slug):
     return render(request, 'app/user.html', context_dict)
 
 @login_required
+def report(request, report_slug):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug)
+
+    # Check if the requested home page belongs to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    # Create a context dictionary which we can pass to the template
+    context_dict = {}
+
+    # Place the user's username in the context dictionary
+    context_dict['username'] = currUser.username
+
+    # Adds our results list to the template context under name reports
+    context_dict['report'] = report
+
+    # Go render the response and return it to the client.
+    return render(request, 'app/report.html', context_dict)
+
+@login_required
 def add_report(request, user_name_slug):
 
     # Obtain information about the user attempting to view the page
