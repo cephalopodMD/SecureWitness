@@ -25,7 +25,10 @@
                     <p><strong>Location:</strong> {{report.location}}</p>
                     <p><strong>ID:</strong> {{report.id}}</p>
                     <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
+                    <p><strong>Private:</strong> {{report.private}}</p>
                     <a href="/app/report/{{ report.id }}/">Edit report</a>
+                     |
+                    <a href="/app/report/{{ report.id }}/files">Attach Files</a>
                      |
                     <a href="/app/report/{{ report.id }}/delete/">Delete report</a>
                 </li>

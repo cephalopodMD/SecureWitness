@@ -1,7 +1,7 @@
 from django.shortcuts import render
 from app.models import Report
 from django.contrib.auth.models import User
-from app.forms import UserForm, ReportForm
+from app.forms import UserForm, ReportForm, FileForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -148,30 +148,6 @@ def user(request, user_name_slug):
     return render(request, 'app/user.html', context_dict)
 
 @login_required
-def report(request, report_slug):
-
-    # Obtain information about the user attempting to view the page
-    currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
-
-    # Check if the requested home page belongs to the current user
-    if currUser.id != report.user.id:
-        # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to manage this report")
-
-    # Create a context dictionary which we can pass to the template
-    context_dict = {}
-
-    # Place the user's username in the context dictionary
-    context_dict['username'] = currUser.username
-
-    # Adds our results list to the template context under name reports
-    context_dict['report'] = report
-
-    # Go render the response and return it to the client.
-    return render(request, 'app/report.html', context_dict)
-
-@login_required
 def add_report(request, user_name_slug):
 
     # Obtain information about the user attempting to view the page
@@ -184,7 +160,7 @@ def add_report(request, user_name_slug):
 
     if request.method == 'POST':
         form = ReportForm(request.POST)
-        
+
         # Have we been provided with a valid form?
         if form.is_valid():
             report = form.save(commit=False)
@@ -233,6 +209,38 @@ def edit_report(request, report_slug=None):
     context_dict = {'form':form, 'user': currUser, 'report': report}
 
     return render(request, 'app/add_report.html', context_dict)
+
+@login_required
+def attach_file(request, report_slug=None):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the requested report does not exist or belongs to the current user
+    if not report or currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = FileForm(request.POST, request.FILES)
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            file = form.save(commit=False)
+            # Set the user and timestamp
+            file.report = report
+            # Other information should already be created
+            file.save()
+            # Return the user back to their homepage
+            return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+        else:
+            print(form.errors)
+    else:
+        form = FileForm()
+
+    context_dict = {'form': form, 'user': currUser, 'report': report}
+
+    return render(request, 'app/files.html', context_dict)
 
 @login_required
 def delete_report(request, report_slug):

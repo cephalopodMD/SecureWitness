@@ -13,7 +13,12 @@ class Report(models.Model):
     # Optional keywords
     keywords = models.CharField(max_length=128, blank=True, help_text="Keywords (optional)")
     # Indicates whether the report is private or public
-    private = models.BooleanField(help_text="Private")
+    private = models.BooleanField(default=False, help_text="Private")
 
     def __str__(self):
         return str(self.id) + ': ' + str(self.shortDesc)
+
+class File(models.Model):
+    report = models.ForeignKey(Report)
+    file = models.FileField(upload_to="")
+    encrypted = models.BooleanField(default=False, help_text="Encrypt")

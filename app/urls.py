@@ -11,5 +11,6 @@ urlpatterns = patterns('',
     url(r'^user/(?P<user_name_slug>[\w\-]+)/$', views.user, name='user'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),
     url(r'^report/(?P<report_slug>[\w\-]+)/$', views.edit_report, name='edit report'),
+    url(r'^report/(?P<report_slug>[\w\-]+)/files/$', views.attach_file, name='attach file'),
     url(r'^report/(?P<report_slug>[\w\-]+)/delete/$', views.delete_report, name='delete report'),
 )
