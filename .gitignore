@@ -58,4 +58,4 @@ docs/_build/
 target/
 
 # Database files
-.sqlite3
+*.sqlite3
