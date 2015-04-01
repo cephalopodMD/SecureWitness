@@ -22,7 +22,8 @@
                 <br />
             {% endfor %}
 
-            <br/><input type="submit" value="File Report" /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
+            <!-- This line determines whether to display a "File Report" or a "Save" button -->
+            <br/><input type="submit" {% if report %} value="Save" {% else %} value="File Report" {% endif %} /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
     </body>
 
