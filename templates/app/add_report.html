@@ -7,7 +7,8 @@
     <body>
         <h1>File a Report</h1>
 
-        <form id="report_form" method="post" action="/app/user/{{user.username}}/add_report/">
+        <!-- This line determines whether to call the add_report or edit_report view -->
+        <form id="report_form" method="post" {% if report %} action="/app/report/{{ report.id }}/" {% else %} action="/app/user/{{user.username}}/add_report/" {% endif %}/>
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}
@@ -18,12 +19,11 @@
                 {{ field.errors }}
                 {{ field.help_text }}
                 {{ field }}
-                <br/>
+                <br />
             {% endfor %}
 
-            <input type="submit" name="submit" value="File Report" />
+            <br/><input type="submit" value="File Report" /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
-        <a href="/app/user/{{user.username}}/">Cancel</a>
     </body>
 
 </html>

@@ -15,12 +15,11 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Report',
             fields=[
-                ('id', models.AutoField(auto_created=True, serialize=False, verbose_name='ID', primary_key=True)),
+                ('id', models.AutoField(auto_created=True, verbose_name='ID', serialize=False, primary_key=True)),
                 ('timeCreated', models.DateTimeField(verbose_name='Time created')),
                 ('shortDesc', models.CharField(max_length=128)),
                 ('detailedDesc', models.CharField(max_length=128)),
                 ('location', models.CharField(max_length=128)),
-                ('dateOfIncident', models.DateField(verbose_name='Date of incident')),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={

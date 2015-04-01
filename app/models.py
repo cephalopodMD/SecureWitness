@@ -15,4 +15,4 @@ class Report(models.Model):
     # Public or private
 
     def __str__(self):
-        return str(self.user) + ': ' + str(self.shortDesc)
+        return str(self.id) + ': ' + str(self.shortDesc)

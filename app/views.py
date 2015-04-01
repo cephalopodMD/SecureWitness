@@ -18,7 +18,7 @@ def register(request):
     # HTTP POST: Process form data
     if request.method == 'POST':
         # Attempt to grab information from the raw form object
-        user_form = UserForm(data=request.POST)
+        user_form = UserForm(request.POST)
         # Check if the form is valid
         if user_form.is_valid():
             # Save the user's form data to the database
@@ -183,7 +183,7 @@ def add_report(request, user_name_slug):
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
-        form = ReportForm(data=request.POST)
+        form = ReportForm(request.POST)
         
         # Have we been provided with a valid form?
         if form.is_valid():
@@ -193,7 +193,8 @@ def add_report(request, user_name_slug):
             report.timeCreated = datetime.now()
             # Other information should already be created
             report.save()
-            return user(request, user_name_slug)
+            # Return the user back to their homepage
+            return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             print(form.errors)
     else:
@@ -201,4 +202,49 @@ def add_report(request, user_name_slug):
 
     context_dict = {'form':form, 'user': currUser}
 
-    return render(request, 'app/add_report.html', context_dict)                        
+    return render(request, 'app/add_report.html', context_dict)
+
+@login_required
+def edit_report(request, report_slug=None):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the requested report does not exist or belongs to the current user
+    if not report or currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = ReportForm(request.POST, instance=report)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            # Save the report to the database
+            form.save()
+            # Return the user back to their homepage
+            return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+        else:
+            print(form.errors)
+    else:
+        form = ReportForm(instance=report)
+
+    context_dict = {'form':form, 'user': currUser, 'report': report}
+
+    return render(request, 'app/add_report.html', context_dict)
+
+@login_required
+def delete_report(request, report_slug):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the requested home page belongs to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+    else:
+        report.delete()
+        return HttpResponseRedirect('/app/user/'+currUser.username+'/')
