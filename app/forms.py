@@ -10,14 +10,6 @@ class UserForm(forms.ModelForm):
         fields = ('username', 'email', 'password')
 
 class ReportForm(forms.ModelForm):
-    # Short description
-    shortDesc = forms.CharField(max_length=128, help_text="Short description.")
-    # Detailed description
-    detailedDesc = forms.CharField(max_length=128, help_text="Detailed description.")
-    # Optional location
-    location = forms.CharField(max_length=128, help_text="Location (optional)", required=False)
-    # Optional date of incident
-    #dateOfIncident = forms.DateTimeField(help_text="Date of incident (optional)", required=False)
     class Meta:
         model = Report
-        exclude = ('user','timeCreated',)
+        exclude = ('user', 'timeCreated',)

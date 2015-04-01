@@ -4,15 +4,12 @@ from django.db import models
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
     user = models.ForeignKey(User)
-    shortDesc = models.CharField(max_length=128)
-    detailedDesc = models.CharField(max_length=128)
+    shortDesc = models.CharField(max_length=128, help_text="Short description")
+    detailedDesc = models.CharField(max_length=128, help_text="Detailed description")
     # Optional location
-    location = models.CharField(max_length=128)
+    location = models.CharField(max_length=128, blank=True, help_text="Location (optional)")
     # Optional date of incident
-    #dateOfIncident = models.DateTimeField('Date of incident', blank=True, null=True, default=None)
-    # Optional keywords
-    # Optional files
-    # Public or private
+    dateOfIncident = models.DateField(blank=True, null=True, help_text="Date of incident (optional)")
 
     def __str__(self):
         return str(self.id) + ': ' + str(self.shortDesc)
