@@ -219,20 +219,21 @@ def edit_report(request, report_slug=None):
 @login_required
 def attach_file(request, report_slug=None):
 
-    # Obtain information about the user attempting to view the page
+    # Obtain information about the user and report
     currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
 
-    # Check if the requested report does not exist or belongs to the current user
+    # Check if the requested report does not exist or belong to the current user
     if not report or currUser != report.user:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
         form = FileForm(request.POST, request.FILES)
-        # Have we been provided with a valid form?
         if form.is_valid():
+            # Create a file that will be stored in the appropriate directory
             file = File(file=request.FILES['file'])
+            # Set the user and the report
             file.user = currUser
             file.report = report
             file.save()
@@ -250,18 +251,22 @@ def attach_file(request, report_slug=None):
 @login_required
 def delete_report(request, report_slug):
 
-    # Obtain information about the user attempting to view the page
+    # Obtain information about the user and report
     currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
 
-    # Check if the requested home page belongs to the current user
+    # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
     else:
+        # Find the list of files associated with the report
         files = File.objects.filter(report=report)
+        # Remove each of the files from memory
+        """
         for f in files:
-            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.name))
+            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.file))
             f.delete()
+        """
         report.delete()
         return HttpResponseRedirect('/app/user/'+currUser.username+'/')
