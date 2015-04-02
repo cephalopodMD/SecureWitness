@@ -1,8 +1,9 @@
 import os
 from django.shortcuts import render
 from app.models import Report, File
-from django.contrib.auth.models import User
+from app.encryption import encrypt_file
 from app.forms import UserForm, ReportForm, FileForm
+from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -231,8 +232,11 @@ def add_file(request, report_slug=None):
     if request.method == 'POST':
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
+            # Encrypt file using AES
+            encrypt_file('passwordpassword',os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
+            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
             # Create a file that will be stored in the appropriate directory
-            file = File(file=request.FILES['file'])
+            file = File(file=request.FILES['file'] + '.enc')
             # Set the user and the report
             file.user = currUser
             file.report = report
