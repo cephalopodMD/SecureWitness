@@ -1,5 +1,10 @@
 from django.contrib.auth.models import User
 from django.db import models
+from SecureWitness.settings import MEDIA_ROOT
+import os
+
+def get_upload_path(instance, filename):
+    return os.path.join(MEDIA_ROOT, instance.user.username, filename)
 
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
@@ -21,7 +26,7 @@ class Report(models.Model):
 class File(models.Model):
     user = models.ForeignKey(User)
     report = models.ForeignKey(Report)
-    file = models.FileField()
+    file = models.FileField(upload_to=get_upload_path)
     encrypted = models.BooleanField(default=False, help_text="Encrypt")
 
     def __str__(self):

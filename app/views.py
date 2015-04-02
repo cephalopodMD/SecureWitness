@@ -232,11 +232,9 @@ def attach_file(request, report_slug=None):
         form = FileForm(request.POST, request.FILES)
         # Have we been provided with a valid form?
         if form.is_valid():
-            file = form.save(commit=False)
-            # Set the user and timestamp
+            file = File(file=request.FILES['file'])
             file.user = currUser
             file.report = report
-            # Other information should already be created
             file.save()
             # Return the user back to their homepage
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
