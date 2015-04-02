@@ -63,3 +63,6 @@ target/
 
 # Database files
 *.sqlite3
+
+# Pycharm idea folder
+.idea/
