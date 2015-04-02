@@ -217,7 +217,7 @@ def edit_report(request, report_slug=None):
     return render(request, 'app/add_report.html', context_dict)
 
 @login_required
-def attach_file(request, report_slug=None):
+def add_file(request, report_slug=None):
 
     # Obtain information about the user and report
     currUser = request.user
@@ -259,14 +259,27 @@ def delete_report(request, report_slug):
     if currUser != report.user:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
-    else:
-        # Find the list of files associated with the report
-        files = File.objects.filter(report=report)
-        # Remove each of the files from memory
-        """
-        for f in files:
-            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.file))
-            f.delete()
-        """
-        report.delete()
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+
+    # Find the list of files associated with the report
+    files = File.objects.filter(report=report)
+    # Remove each of the files from memory
+    """
+    for f in files:
+        os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.file))
+        f.delete()
+    """
+    report.delete()
+    return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+
+"""
+@login_required
+def delete_file(request, report_slug, file_slug):
+        # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+"""
