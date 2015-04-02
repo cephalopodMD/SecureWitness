@@ -5,10 +5,10 @@
     </head>
 
     <body>
-        <h1>File a Report</h1>
+        <h1>Attach a File</h1>
 
         <!-- This line determines whether to call the add_report or edit_report view -->
-        <form id="report_form" method="post" {% if report %} action="/app/report/{{ report.id }}/" {% else %} action="/app/user/{{user.username}}/add_report/" {% endif %}/>
+        <form id="file_form" method="post" action="/app/report/{{report.id}}/files/" enctype="multipart/form-data"/>
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}
@@ -23,7 +23,7 @@
             {% endfor %}
 
             <!-- This line determines whether to display a "File Report" or a "Save" button -->
-            <br/><input type="submit" {% if report %} value="Save" {% else %} value="File Report" {% endif %} /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
+            <br/><input type="submit" value="Done" /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
     </body>
 
