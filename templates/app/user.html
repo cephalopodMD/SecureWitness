@@ -26,6 +26,13 @@
                     <p><strong>ID:</strong> {{report.id}}</p>
                     <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
                     <p><strong>Private:</strong> {{report.private}}</p>
+                    {% if files %}
+                    {% for f in files %}
+                        {% if f.report == report %}
+                            <p>{{ f }}</p>
+                        {% endif %}
+                    {% endfor %}
+                    {% endif %}
                     <a href="/app/report/{{ report.id }}/">Edit report</a>
                      |
                     <a href="/app/report/{{ report.id }}/files">Attach Files</a>

@@ -1,11 +1,13 @@
+import os
 from django.shortcuts import render
-from app.models import Report
+from app.models import Report, File
 from django.contrib.auth.models import User
 from app.forms import UserForm, ReportForm, FileForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
+from SecureWitness import settings
 
 def index(request):
     # Direct the user to the SecureWitness homepage
@@ -40,6 +42,8 @@ def register(request):
                 if currUser.is_active:
                     # Log the user in.
                     login(request, currUser)
+                    # Create a folder for the user in the media directory
+                    os.mkdir(settings.MEDIA_ROOT+'/'+currUser.username+'/')
                     # Redirect the user to the home page
                     return HttpResponseRedirect('/app/')
                 else:
@@ -140,9 +144,11 @@ def user(request, user_name_slug):
     # Retrieve all of the associated reports
     # Note that filter returns >= 1 model instance
     reports = Report.objects.filter(user=currUser)
+    files = File.objects.filter(user=currUser)
 
     # Adds our results list to the template context under name reports
     context_dict['reports'] = reports
+    context_dict['files'] = files
 
     # Go render the response and return it to the client.
     return render(request, 'app/user.html', context_dict)
@@ -228,6 +234,7 @@ def attach_file(request, report_slug=None):
         if form.is_valid():
             file = form.save(commit=False)
             # Set the user and timestamp
+            file.user = currUser
             file.report = report
             # Other information should already be created
             file.save()
@@ -254,5 +261,9 @@ def delete_report(request, report_slug):
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
     else:
+        files = File.objects.filter(report=report)
+        for f in files:
+            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.name))
+            f.delete()
         report.delete()
         return HttpResponseRedirect('/app/user/'+currUser.username+'/')

@@ -19,6 +19,11 @@ class Report(models.Model):
         return str(self.id) + ': ' + str(self.shortDesc)
 
 class File(models.Model):
+    user = models.ForeignKey(User)
     report = models.ForeignKey(Report)
-    file = models.FileField(upload_to="")
+    file = models.FileField()
     encrypted = models.BooleanField(default=False, help_text="Encrypt")
+
+    def __str__(self):
+        index = str(self.file.file).rfind('\\')
+        return str(self.file.file)[index+1:]
