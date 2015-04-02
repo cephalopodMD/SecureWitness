@@ -187,6 +187,17 @@ def add_report(request, user_name_slug):
     return render(request, 'app/add_report.html', context_dict)
 
 @login_required
+def report(request, report_slug):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    if report.private and report.user != currUser:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+@login_required
 def edit_report(request, report_slug=None):
 
     # Obtain information about the user attempting to view the page

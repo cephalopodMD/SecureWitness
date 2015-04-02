@@ -6,6 +6,13 @@ import os
 def get_upload_path(instance, filename):
     return os.path.join(MEDIA_ROOT, instance.user.username, filename)
 
+"""
+class Folder(models.Model):
+    user = models.ForeignKey(User)
+    name = models.CharField(max_length=100)
+    parentFolder = models.ForeignKey("self", blank=True)
+"""
+
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
     user = models.ForeignKey(User)

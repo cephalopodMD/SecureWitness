@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SecureWitness</title>
+    </head>
+
+    <body>
+
+
+                    <p><strong>Short description:</strong> {{report.shortDesc}}</p>
+                    <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
+                    <p><strong>Date of Incident:</strong> {{report.dateOfIncident}}</p>
+                    <p><strong>Location:</strong> {{report.location}}</p>
+                    <p><strong>ID:</strong> {{report.id}}</p>
+                    <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
+                    <p><strong>Private:</strong> {{report.private}}</p>
+                    {% if files %}
+                    {% for f in files %}
+                        {% if f.report == report %}
+                            <p>{{ f }}</p>
+                        {% endif %}
+                    {% endfor %}
+                    {% endif %}
+
+    </body>
+</html>
