@@ -44,7 +44,7 @@ def register(request):
                     # Log the user in.
                     login(request, currUser)
                     # Create a folder for the user in the media directory
-                    os.mkdir(settings.MEDIA_ROOT+'/'+currUser.username+'/')
+                    os.mkdir(settings.MEDIA_ROOT+'\\'+currUser.username+'\\')
                     # Redirect the user to the home page
                     return HttpResponseRedirect('/app/')
                 else:
@@ -140,7 +140,7 @@ def user(request, user_name_slug):
     context_dict = {}
 
     # Place the user's username in the context dictionary
-    context_dict['username'] = currUser.username
+    context_dict['user'] = currUser
 
     # Retrieve all of the associated reports
     # Note that filter returns >= 1 model instance
@@ -194,15 +194,28 @@ def report(request, report_slug):
     currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
 
+    # Ensure that the report exists
+    if not report:
+        return HttpResponse("You are not authorized to view this page")
+
     if report.private and report.user != currUser:
+        return HttpResponse("You are not authorized to view this page")
+
+    context_dict = {}
+    context_dict['user'] = currUser
+    context_dict['report'] = report
+
+    return render(request, 'app/report.html', context_dict)
+
+@login_required
+def edit_report(request, user_name_slug, report_slug=None):
+
+    # Check if the requested home page belongs to the current user
+    currUser = request.user
+    if currUser.username != user_name_slug:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
 
-@login_required
-def edit_report(request, report_slug=None):
-
-    # Obtain information about the user attempting to view the page
-    currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
 
     # Check if the requested report does not exist or belongs to the current user
