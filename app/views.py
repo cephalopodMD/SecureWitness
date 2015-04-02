@@ -263,11 +263,9 @@ def delete_report(request, report_slug):
     # Find the list of files associated with the report
     files = File.objects.filter(report=report)
     # Remove each of the files from memory
-    """
     for f in files:
-        os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, f.file))
+        os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, str(f.file)))
         f.delete()
-    """
     report.delete()
     return HttpResponseRedirect('/app/user/'+currUser.username+'/')
 
