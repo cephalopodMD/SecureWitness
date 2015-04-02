@@ -65,4 +65,4 @@ target/
 *.sqlite3
 
 # Pycharm idea folder
-.idea/
+.idea/*
