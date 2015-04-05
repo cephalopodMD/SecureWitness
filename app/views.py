@@ -195,18 +195,20 @@ def report(request, report_slug):
 
     # Obtain information about the user attempting to view the page
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
+    currReport = Report.objects.filter(id=report_slug).first()
+    files = File.objects.filter(report=currReport)
 
     # Ensure that the report exists
     if not report:
         return HttpResponse("You are not authorized to view this page")
 
-    if report.private and report.user != currUser:
+    if currReport.private and currReport.user != currUser:
         return HttpResponse("You are not authorized to view this page")
 
     context_dict = {}
     context_dict['user'] = currUser
-    context_dict['report'] = report
+    context_dict['report'] = currReport
+    context_dict['files'] = files
 
     return render(request, 'app/report.html', context_dict)
 
@@ -259,15 +261,17 @@ def add_file(request, report_slug=None):
     if request.method == 'POST':
         form = FileForm(request.POST, request.FILES)
         if form.is_valid():
-            # Encrypt file using AES
-            encrypt_file('passwordpassword',os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
-            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
             # Create a file that will be stored in the appropriate directory
-            file = File(file=request.FILES['file'] + '.enc')
+            file = File(file=request.FILES['file'])
             # Set the user and the report
             file.user = currUser
             file.report = report
+            file.encrypted = form.cleaned_data['encrypted']
             file.save()
+            # Encrypt file using AES
+            print(file.encrypted)
+            if file.encrypted and form.cleaned_data['key'] == form.cleaned_data['verify_key']:
+                encrypt_file(form.cleaned_data['key'],os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, str(file.file)))
             # Return the user back to their homepage
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:

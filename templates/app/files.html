@@ -21,9 +21,10 @@
                 {{ field }}
                 <br />
             {% endfor %}
-
             <!-- This line determines whether to display a "File Report" or a "Save" button -->
-            <br/><input type="submit" value="Done" /> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
+            <br />
+            <input type="submit" value="Done" />
+            <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
     </body>
 
