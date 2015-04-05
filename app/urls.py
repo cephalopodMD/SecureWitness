@@ -3,7 +3,8 @@ from app import views
 
 # Third parameter is optional for identification purposes
 urlpatterns = patterns('',
-    url(r'^$', views.index, name='index'),
+    url(r'^$', views.home, name='home'),
+
     url(r'^register/$', views.register, name='register'),
     url(r'^login/$', views.user_login, name='login'),
     url(r'^logout/$', views.user_logout, name='logout'),
@@ -18,4 +19,6 @@ urlpatterns = patterns('',
 
     url(r'^report/(?P<report_slug>[\w\-]+)/files/$', views.add_file, name='add file'),
     #url(r'^report/(?P<report_slug>[\w\-]+)/files/(?P<file_slug>[\w\-]+)/delete/$', views.delete_file, name='delete file'),
+
+    url(r'^search/$', views.search, name='search'),
 )

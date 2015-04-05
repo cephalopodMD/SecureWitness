@@ -8,9 +8,13 @@
         <!-- Displays the user's username as a header -->
         <h1>{{ user.username }}</h1>
         <p>
-            <a href="/app/">Home</a>
+            <a href="/app/">SecureWitness Home</a>
+             |
+            <a href="/app/user/{{user.username}}/">View Your Homepage</a>
              |
             <a href="/app/logout/">Logout</a>
+             |
+            <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
         </p>
         <p>
             <a href="/app/user/{{ user.username }}/add_report/">File a New Report</a>
@@ -19,22 +23,7 @@
             <ul>
                 {% for report in reports %}
                 <li>
-                    <p><strong>Short description:</strong> {{report.shortDesc}}</p>
-                    <!--
-                    <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
-                    <p><strong>Date of Incident:</strong> {{report.dateOfIncident}}</p>
-                    <p><strong>Location:</strong> {{report.location}}</p>
-                    <p><strong>ID:</strong> {{report.id}}</p>
-                    <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
-                    <p><strong>Private:</strong> {{report.private}}</p>
-                    {% if files %}
-                    {% for f in files %}
-                        {% if f.report == report %}
-                            <p>{{ f }}</p>
-                        {% endif %}
-                    {% endfor %}
-                    {% endif %}
-                    -->
+                    <p>{{report.shortDesc}}</p>
                     <a href="/app/report/{{ report.id }}/">View Report</a>
                      |
                     <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>

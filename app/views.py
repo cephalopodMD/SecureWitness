@@ -2,17 +2,20 @@ import os
 from django.shortcuts import render
 from app.models import Report, File
 from app.encryption import encrypt_file
-from app.forms import UserForm, ReportForm, FileForm
+from app.forms import UserForm, ReportForm, FileForm, SearchForm
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
+from django.db.models import Q
 
-def index(request):
+def home(request):
+    # Create a list of all visible reports
+    reports = Report.objects.filter(private=False)
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/index.html', {})
+    return render(request, 'app/home.html', {'reports': reports})
 
 def register(request):
 
@@ -309,3 +312,40 @@ def delete_file(request, report_slug, file_slug):
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
 """
+
+def search(request):
+    if request.method == 'POST':
+        reports = Report.objects.filter(private=False)
+
+        short = request.POST.get('shortDesc', None)
+        if short:
+            shortWords = short.split()
+            for word in shortWords:
+                reports = reports.filter(shortDesc__icontains=word)
+
+        long = request.POST.get('detailedDesc', None)
+        if long:
+            longWords = long.split()
+            for word in longWords:
+                reports = reports.filter(detailedDesc__icontains=word)
+
+        keywords = request.POST.get('keywords', None)
+        if keywords:
+            keywordWords = keywords.split()
+            for word in keywordWords:
+                reports = reports.filter(keywords__icontains=word)
+
+        location = request.POST.get('location', None)
+        if location:
+            reports = reports.filter(location__icontains=location)
+
+        dateOfIncident = request.POST.get('dateOfIncident', None)
+        if dateOfIncident:
+            reports = reports.filter(dateOfIndicent=dateOfIncident)
+
+        return render(request, 'app/home.html', {'reports': reports})
+
+    else:
+       form = SearchForm()
+
+    return render(request, 'app/search.html', {'form': form})

@@ -26,3 +26,10 @@ class FileForm(forms.ModelForm):
     class Meta:
         model = File
         exclude = ('user', 'report',)
+
+class SearchForm(forms.Form):
+    shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")
+    detailedDesc = forms.CharField(required=False, max_length=128, help_text="Detailed description")
+    keywords = forms.CharField(required=False, max_length=128, help_text="Keywords")
+    location = forms.CharField(required=False, max_length=128, help_text="Location (optional)")
+    dateOfIncident = forms.DateField(required=False, widget=SelectDateWidget(years=YEAR_CHOICES), help_text="Date of incident")
