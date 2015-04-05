@@ -25,7 +25,9 @@ class ReportForm(forms.ModelForm):
 class FileForm(forms.ModelForm):
     class Meta:
         model = File
-        exclude = ('user', 'report',)
+        exclude = ['user', 'report']
+    key = forms.CharField(required=False, max_length=32, help_text="Enter your key")
+    verify_key = forms.CharField(required=False, max_length=32, help_text="Verify the key")
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")

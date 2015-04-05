@@ -30,6 +30,11 @@ def encrypt_file(key, in_filename, out_filename=None, chunksize=64*1024):
     '''
     out_filename = in_filename + '.temp'
 
+    if len(key) < 16:
+        key += ' ' * 8
+    if len(key) % 8 != 0:
+        key += ' ' * (8 - len(key) % 8)
+
     iv = Random.new().read(AES.block_size)
     encryptor = AES.new(key, AES.MODE_CBC, iv)
     filesize = os.path.getsize(in_filename)
@@ -59,6 +64,11 @@ def decrypt_file(key, in_filename, out_filename=None, chunksize=24*1024):
         out_filename will be 'aaa.zip')
     """
     out_filename = in_filename + '.temp'
+
+    if len(key) < 16:
+        key += ' ' * 8
+    if len(key) % 8 != 0:
+        key += ' ' * (8 - len(key) % 8)
 
     with open(in_filename, 'rb') as infile:
         origsize = struct.unpack('<Q', infile.read(struct.calcsize('Q')))[0]

@@ -284,7 +284,7 @@ def add_file(request, report_slug=None):
     return render(request, 'app/files.html', context_dict)
 
 @login_required
-def delete_report(request, report_slug):
+def delete_report(request, user_name_slug, report_slug):
 
     # Obtain information about the user and report
     currUser = request.user

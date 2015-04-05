@@ -15,7 +15,9 @@
         {% if files %}
             {% for f in files %}
                 {% if f.report == report %}
-                    <p>{{ f }}</p>
+                    <div>
+                        <a href="/media{{ f.file }}">{{ f }}</a>
+                    </div>
                 {% endif %}
             {% endfor %}
         {% endif %}
