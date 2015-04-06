@@ -14,10 +14,14 @@
         <p><strong>Private:</strong> {{report.private}}</p>
         {% if files %}
             {% for f in files %}
-                {% if f.report == report %}
-                    <p>{{ f }}</p>
+                {{ f }}<br/>
+                <a href="">Download</a>
+                {% if f.user == user %}
+                    | <a href="/app/report/{{report.id}}/files/{{f.id}}/delete">Remove</a><br/>
                 {% endif %}
             {% endfor %}
+        {% else %}
+            <p><strong>Attachments:</strong> None</p>
         {% endif %}
     </body>
 

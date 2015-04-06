@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from app.models import Report, File
+from app.models import Report, Attachment
 from django.forms.extras.widgets import SelectDateWidget
 
 YEAR_CHOICES = ()
@@ -22,10 +22,11 @@ class ReportForm(forms.ModelForm):
         super(ReportForm, self).__init__(*args, **kwargs)
         self.fields['dateOfIncident'].widget = SelectDateWidget(years=YEAR_CHOICES)
 
-class FileForm(forms.ModelForm):
+class AttachmentForm(forms.ModelForm):
+    password = forms.CharField(required=False, max_length=128, widget=forms.PasswordInput, help_text="Encryption")
     class Meta:
-        model = File
-        exclude = ('user', 'report',)
+        model = Attachment
+        exclude = ('user', 'report', 'encrypted')
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")

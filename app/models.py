@@ -6,13 +6,6 @@ import os
 def get_upload_path(instance, filename):
     return os.path.join(MEDIA_ROOT, instance.user.username, filename)
 
-"""
-class Folder(models.Model):
-    user = models.ForeignKey(User)
-    name = models.CharField(max_length=100)
-    parentFolder = models.ForeignKey("self", blank=True)
-"""
-
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
     user = models.ForeignKey(User)
@@ -30,12 +23,11 @@ class Report(models.Model):
     def __str__(self):
         return str(self.id) + ': ' + str(self.shortDesc)
 
-class File(models.Model):
+class Attachment(models.Model):
     user = models.ForeignKey(User)
     report = models.ForeignKey(Report)
     file = models.FileField(upload_to=get_upload_path)
-    encrypted = models.BooleanField(default=False, help_text="Encrypt")
+    encrypted = models.BooleanField(default=False)
 
     def __str__(self):
-        index = str(self.file.file).rfind('\\')
-        return str(self.file.file)[index+1:]
+        return os.path.split(self.file.name)[1]

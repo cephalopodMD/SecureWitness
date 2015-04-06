@@ -18,7 +18,7 @@ urlpatterns = patterns('',
     url(r'^report/(?P<report_slug>[\w\-]+)/$', views.report, name='view report'),
 
     url(r'^report/(?P<report_slug>[\w\-]+)/files/$', views.add_file, name='add file'),
-    #url(r'^report/(?P<report_slug>[\w\-]+)/files/(?P<file_slug>[\w\-]+)/delete/$', views.delete_file, name='delete file'),
+    url(r'^report/(?P<report_slug>[\w\-]+)/files/(?P<file_slug>[\w\-]+)/delete/$', views.delete_file, name='delete file'),
 
     url(r'^search/$', views.search, name='search'),
 )

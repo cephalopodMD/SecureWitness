@@ -1,15 +1,13 @@
 import os
 from django.shortcuts import render
-from app.models import Report, File
+from app.models import Report, Attachment
 from app.encryption import encrypt_file
-from app.forms import UserForm, ReportForm, FileForm, SearchForm
-from django.contrib.auth.models import User
+from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
-from django.db.models import Q
 
 def home(request):
     # Create a list of all visible reports
@@ -148,7 +146,7 @@ def user(request, user_name_slug):
     # Retrieve all of the associated reports
     # Note that filter returns >= 1 model instance
     reports = Report.objects.filter(user=currUser)
-    files = File.objects.filter(user=currUser)
+    files = Attachment.objects.filter(user=currUser)
 
     # Adds our results list to the template context under name reports
     context_dict['reports'] = reports
@@ -204,9 +202,12 @@ def report(request, report_slug):
     if report.private and report.user != currUser:
         return HttpResponse("You are not authorized to view this page")
 
+    files = Attachment.objects.filter(report=report)
+
     context_dict = {}
     context_dict['user'] = currUser
     context_dict['report'] = report
+    context_dict['files'] = files
 
     return render(request, 'app/report.html', context_dict)
 
@@ -257,30 +258,34 @@ def add_file(request, report_slug=None):
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
-        form = FileForm(request.POST, request.FILES)
+        form = AttachmentForm(request.POST, request.FILES)
         if form.is_valid():
-            # Encrypt file using AES
-            encrypt_file('passwordpassword',os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
-            os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, request.FILES['file']))
-            # Create a file that will be stored in the appropriate directory
-            file = File(file=request.FILES['file'] + '.enc')
-            # Set the user and the report
-            file.user = currUser
-            file.report = report
-            file.save()
-            # Return the user back to their homepage
+            attachment = form.save(commit=False)
+            attachment.user = currUser
+            attachment.report = report
+            attachment.save()
+            encrypt = request.POST.get('password', None)
+            if encrypt:
+                # Encrypt the attachment
+                fileName = os.path.join(settings.MEDIA_ROOT, currUser.username, attachment.file.name)
+                encrypt_file('passwordpassword', fileName)
+                attachment.file.name += '.enc'
+                os.remove(fileName)
+                attachment.encrypted = True
+                attachment.save()
+
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:
             print(form.errors)
     else:
-        form = FileForm()
+        form = AttachmentForm()
 
     context_dict = {'form': form, 'user': currUser, 'report': report}
 
     return render(request, 'app/files.html', context_dict)
 
 @login_required
-def delete_report(request, report_slug):
+def delete_report(request, user_name_slug, report_slug):
 
     # Obtain information about the user and report
     currUser = request.user
@@ -292,26 +297,31 @@ def delete_report(request, report_slug):
         return HttpResponse("You are not authorized to view this page")
 
     # Find the list of files associated with the report
-    files = File.objects.filter(report=report)
+    files = Attachment.objects.filter(report=report)
     # Remove each of the files from memory
     for f in files:
-        os.remove(os.path.join(settings.MEDIA_ROOT+'/'+currUser.username, str(f.file)))
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f.file)))
         f.delete()
     report.delete()
     return HttpResponseRedirect('/app/user/'+currUser.username+'/')
 
-"""
 @login_required
 def delete_file(request, report_slug, file_slug):
-        # Obtain information about the user and report
+    # Obtain information about the user and report
     currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
+    f = Attachment.objects.filter(id=file_slug).first()
 
     # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
-"""
+
+    os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f.file)))
+    f.delete()
+
+    return HttpResponseRedirect('/app/report/'+report_slug)
+
 
 def search(request):
     if request.method == 'POST':
