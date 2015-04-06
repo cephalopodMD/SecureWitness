@@ -15,7 +15,7 @@
         {% if files %}
             {% for f in files %}
                 {{ f }}<br/>
-                <a href="">Download</a>
+                <a href="/media/{{ user.username }}/{{ f }}">Download</a>
                 {% if f.user == user %}
                     | <a href="/app/report/{{report.id}}/files/{{f.id}}/delete">Remove</a><br/>
                 {% endif %}
