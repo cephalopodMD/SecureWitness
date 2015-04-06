@@ -193,20 +193,21 @@ def report(request, report_slug):
 
     # Obtain information about the user attempting to view the page
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
+    currReport = Report.objects.filter(id=report_slug).first()
+    files = Attachment.objects.filter(report=currReport)
 
     # Ensure that the report exists
-    if not report:
+    if not currReport:
         return HttpResponse("You are not authorized to view this page")
 
-    if report.private and report.user != currUser:
+    if currReport.private and currReport.user != currUser:
         return HttpResponse("You are not authorized to view this page")
 
-    files = Attachment.objects.filter(report=report)
+    files = Attachment.objects.filter(report=currReport)
 
     context_dict = {}
     context_dict['user'] = currUser
-    context_dict['report'] = report
+    context_dict['report'] = currReport
     context_dict['files'] = files
 
     return render(request, 'app/report.html', context_dict)
@@ -264,19 +265,18 @@ def add_file(request, report_slug=None):
             attachment.user = currUser
             attachment.report = report
             attachment.save()
-            encrypt = request.POST.get('password', None)
-            if encrypt:
+            key = request.POST.get('key', None)
+            if key:
                 # Find the name of the original file
                 fileName = os.path.join(settings.MEDIA_ROOT, currUser.username, attachment.file.name)
                 # Encrypt the file and update the file name in the database
                 attachment.encrypted = True
-                encrypt_file(encrypt, fileName)
+                encrypt_file(key, fileName)
                 attachment.file.name += '.enc'
                 # Remove the original file from memory
                 os.remove(fileName)
                 # Save updates to the database
                 attachment.save()
-
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:
             print(form.errors)
