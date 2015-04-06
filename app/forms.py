@@ -23,7 +23,7 @@ class ReportForm(forms.ModelForm):
         self.fields['dateOfIncident'].widget = SelectDateWidget(years=YEAR_CHOICES)
 
 class AttachmentForm(forms.ModelForm):
-    password = forms.CharField(required=False, max_length=128, widget=forms.PasswordInput, help_text="Encryption")
+    password = forms.CharField(required=False, max_length=32, widget=forms.PasswordInput, help_text="Encryption")
     class Meta:
         model = Attachment
         exclude = ('user', 'report', 'encrypted')

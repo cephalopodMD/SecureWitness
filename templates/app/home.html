@@ -14,9 +14,10 @@
             <a href="/app/logout/">Logout</a>
              |
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
-            {% if reports %}
 
             <a href="/app/search/">Search for Reports</a>
+
+            {% if reports %}
 
             <ul>
                 {% for report in reports %}
@@ -27,7 +28,7 @@
                 {% endfor %}
             </ul>
             {% else %}
-                <p><strong>There are no reports currently in the database</strong></p>
+                <p><strong>There are no matching reports currently in the database</strong></p>
             {% endif %}
         {% else %}
             <h1>Welcome to SecureWitness</h1>

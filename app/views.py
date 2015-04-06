@@ -266,12 +266,15 @@ def add_file(request, report_slug=None):
             attachment.save()
             encrypt = request.POST.get('password', None)
             if encrypt:
-                # Encrypt the attachment
+                # Find the name of the original file
                 fileName = os.path.join(settings.MEDIA_ROOT, currUser.username, attachment.file.name)
-                encrypt_file('passwordpassword', fileName)
-                attachment.file.name += '.enc'
-                os.remove(fileName)
+                # Encrypt the file and update the file name in the database
                 attachment.encrypted = True
+                encrypt_file(encrypt, fileName)
+                attachment.file.name += '.enc'
+                # Remove the original file from memory
+                os.remove(fileName)
+                # Save updates to the database
                 attachment.save()
 
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
