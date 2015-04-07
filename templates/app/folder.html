@@ -17,6 +17,7 @@
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
         </p>
         {% if reports %}
+            <p><strong>Reports</strong></p>
             <ul>
                 {% for report in reports %}
                 <li>
@@ -24,6 +25,8 @@
                     <a href="/app/report/{{ report.id }}/">View Report</a>
                      |
                     <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
+                     |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
                      |
                     <a href="/app/report/{{ report.id }}/files">Attach Files</a>
                      |

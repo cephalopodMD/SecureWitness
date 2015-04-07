@@ -17,12 +17,12 @@ class Folder(models.Model):
         super(Folder, self).save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return str(self.name)
 
     # This will enforce the fact that a user cannot create two folders with the same name
     """
     class Meta:
-        unique_together = ('user', 'slug',)
+        unique_together = ('user', 'name',)
     """
 
 class Report(models.Model):

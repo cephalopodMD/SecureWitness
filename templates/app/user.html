@@ -22,6 +22,7 @@
             <a href="/app/user/{{ user.username }}/add_folder/">Create a New Folder</a>
         </p>
         {% if folders %}
+            <p><strong>Folders</strong></p>
             <ul>
                 {% for folder in folders %}
                     <li>
@@ -34,6 +35,7 @@
             </ul>
         {% endif %}
         {% if reports %}
+            <p><strong>Reports</strong></p>
             <ul>
                 {% for report in reports %}
                 <li>
@@ -41,6 +43,8 @@
                     <a href="/app/report/{{ report.id }}/">View Report</a>
                      |
                     <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
+                     |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
                      |
                     <a href="/app/report/{{ report.id }}/files">Attach Files</a>
                      |
