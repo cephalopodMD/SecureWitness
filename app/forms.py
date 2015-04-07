@@ -32,7 +32,7 @@ class AttachmentForm(forms.ModelForm):
 class FolderForm(forms.ModelForm):
     class Meta:
         model = Folder
-        exclude = ('user',)
+        exclude = ('user', 'slug',)
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")

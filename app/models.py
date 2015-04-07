@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 from SecureWitness.settings import MEDIA_ROOT
+from django.template.defaultfilters import slugify
 import os
 
 def get_upload_path(instance, filename):
@@ -9,13 +10,20 @@ def get_upload_path(instance, filename):
 class Folder(models.Model):
     user = models.ForeignKey(User)
     name = models.CharField(max_length=128, help_text="Folder Name")
+    slug = models.SlugField()
+
+    def save(self, *args, **kwargs):
+        self.slug = slugify(self.name)
+        super(Folder, self).save(*args, **kwargs)
 
     def __str__(self):
         return self.name
 
     # This will enforce the fact that a user cannot create two folders with the same name
+    """
     class Meta:
-        unique_together = ('user', 'name',)
+        unique_together = ('user', 'slug',)
+    """
 
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')

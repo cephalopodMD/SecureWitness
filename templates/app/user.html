@@ -26,9 +26,9 @@
                 {% for folder in folders %}
                     <li>
                         <p>{{ folder.name }}</p>
-                        <a href="/app/user/{{ user.username }}/folder/{{ folder.name }}/">View Folder</a>
+                        <a href="/app/user/{{ user.username }}/folder/{{ folder.slug }}/">View Folder</a>
                          |
-                        <a href="/app/user/{{ user.username }}/folder/{{ folder.name }}/delete/">Delete Folder</a>
+                        <a href="/app/user/{{ user.username }}/folder/{{ folder.slug }}/delete/">Delete Folder</a>
                     </li>
                 {% endfor %}
             </ul>

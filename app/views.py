@@ -417,13 +417,13 @@ def delete_folder(request, user_name_slug, folder_slug):
 
     # Obtain information about the user and report
     currUser = request.user
-    folder = Folder.objects.filter(user = currUser, name = folder_slug)
+    folder = Folder.objects.filter(user = currUser, slug = folder_slug).first()
     reports = Report.objects.filter(folder=folder)
 
     for r in reports:
         delete_report(request, user_name_slug, r.id)
 
     folder.delete()
-    os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder_slug))
+    os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder.name))
 
     return HttpResponseRedirect('/app/user/'+currUser.username+'/')
