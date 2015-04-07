@@ -16,20 +16,6 @@
              |
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
         </p>
-        <p>
-            <a href="/app/user/{{ user.username }}/add_report/">File a New Report</a>
-        </p>
-        {% if folders %}
-            <ul>
-                {% for folder in folders %}
-                    <li>
-                        <a href="/app/user/{{ user.username }}/folder/{{ folder.name }}/">{{ folder.name }}</a>
-                         |
-                        <a href="/app/user/{{ user.username }}/folder/{{ folder.name }}/delete/">Delete Folder</a>
-                    </li>
-                {% endfor %}
-            </ul>
-        {% endif %}
         {% if reports %}
             <ul>
                 {% for report in reports %}
@@ -46,7 +32,7 @@
                 {% endfor %}
             </ul>
         {% else %}
-            <p><strong>You haven't yet created any reports.</strong></p>
+            <p><strong>There are no reports in this folder.</strong></p>
         {% endif %}
     </body>
 </html>

@@ -1,6 +1,6 @@
 import os
 from django.shortcuts import render
-from app.models import Report, Attachment
+from app.models import Report, Attachment, Folder
 from app.encryption import encrypt_file
 from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm
 from django.contrib.auth import authenticate, login, logout
@@ -145,12 +145,14 @@ def user(request, user_name_slug):
 
     # Retrieve all of the associated reports
     # Note that filter returns >= 1 model instance
-    reports = Report.objects.filter(user=currUser)
+    reports = Report.objects.filter(user=currUser, folder=None)
     files = Attachment.objects.filter(user=currUser)
+    folders = Folder.objects.filter(user=currUser)
 
     # Adds our results list to the template context under name reports
     context_dict['reports'] = reports
     context_dict['files'] = files
+    context_dict['folders'] = folders
 
     # Go render the response and return it to the client.
     return render(request, 'app/user.html', context_dict)
@@ -175,6 +177,7 @@ def add_report(request, user_name_slug):
             # Set the user and timestamp
             report.user = currUser
             report.timeCreated = datetime.now()
+            report.folder = None
             # Other information should already be created
             report.save()
             # Return the user back to their homepage
@@ -202,8 +205,6 @@ def report(request, report_slug):
 
     if currReport.private and currReport.user != currUser:
         return HttpResponse("You are not authorized to view this page")
-
-    files = Attachment.objects.filter(report=currReport)
 
     context_dict = {}
     context_dict['user'] = currUser
@@ -362,3 +363,29 @@ def search(request):
        form = SearchForm()
 
     return render(request, 'app/search.html', {'form': form})
+
+def folder(request, user_name_slug, folder_slug):
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+
+    # Check if the requested home page belongs to the current user
+    if currUser.username != user_name_slug:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    context_dict = {}
+
+    # Place the user's username in the context dictionary
+    context_dict['user'] = currUser
+
+    # Retrieve all of the associated reports
+    # Note that filter returns >= 1 model instance
+    folder = Folder.objects.filter(user = currUser, name = folder_slug)
+    reports = Report.objects.filter(user=currUser, folder=folder)
+
+    context_dict['reports'] = reports
+
+    return render(request, 'app/folder.html', context_dict)
+
+def add_folder(request):
+    print()

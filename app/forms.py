@@ -17,7 +17,7 @@ class UserForm(forms.ModelForm):
 class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
-        exclude = ('user', 'timeCreated',)
+        exclude = ('user', 'timeCreated','folder',)
     def __init__(self, *args, **kwargs):
         super(ReportForm, self).__init__(*args, **kwargs)
         self.fields['dateOfIncident'].widget = SelectDateWidget(years=YEAR_CHOICES)
