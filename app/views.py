@@ -2,7 +2,7 @@ import os
 from django.shortcuts import render
 from app.models import Report, Attachment, Folder
 from app.encryption import encrypt_file
-from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm
+from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm, FolderForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -45,7 +45,7 @@ def register(request):
                     # Log the user in.
                     login(request, currUser)
                     # Create a folder for the user in the media directory
-                    os.mkdir(settings.MEDIA_ROOT+'\\'+currUser.username+'\\')
+                    os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
                     # Redirect the user to the home page
                     return HttpResponseRedirect('/app/')
                 else:
@@ -387,5 +387,38 @@ def folder(request, user_name_slug, folder_slug):
 
     return render(request, 'app/folder.html', context_dict)
 
-def add_folder(request):
+@login_required
+def add_folder(request, user_name_slug):
+
+    # Obtain information about the user attempting to view the page
+    currUser = request.user
+
+    # Check if the requested home page belongs to the current user
+    if currUser.username != user_name_slug:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = FolderForm(request.POST)
+
+        # Have we been provided with a valid form?
+        if form.is_valid():
+            folder = form.save(commit=False)
+            # Set the user and timestamp
+            folder.user = currUser
+            # Other information should already be created
+            folder.save()
+            # Return the user back to their homepage
+            os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username,folder.name))
+            return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        else:
+            print(form.errors)
+    else:
+        form = FolderForm()
+
+    context_dict = {'form':form, 'user': currUser}
+
+    return render(request, 'app/add_folder.html', context_dict)
+
+def delete_folder(request, user_name_slug, folder_slug):
     print()

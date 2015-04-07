@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SecureWitness</title>
+    </head>
+
+    <body>
+        <h1>Create a Folder</h1>
+
+        <!-- This line determines whether to call the add_report or edit_report view -->
+        <form id="folder_form" method="post" action="/app/user/{{user.username}}/add_folder/"/>
+
+            {% csrf_token %}
+            {% for hidden in form.hidden_fields %}
+                {{ hidden }}
+            {% endfor %}
+
+            {% for field in form.visible_fields %}
+                {{ field.errors }}
+                {{ field.help_text }}
+                {{ field }}
+                <br />
+            {% endfor %}
+
+            <!-- This line determines whether to display a "File Report" or a "Save" button -->
+            <br/><input type="submit" value="Create"/> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
+        </form>
+    </body>
+
+</html>

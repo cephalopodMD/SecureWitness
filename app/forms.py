@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from app.models import Report, Attachment
+from app.models import Report, Attachment, Folder
 from django.forms.extras.widgets import SelectDateWidget
 
 YEAR_CHOICES = ()
@@ -28,6 +28,11 @@ class AttachmentForm(forms.ModelForm):
     class Meta:
         model = Attachment
         exclude = ('user', 'report', 'encrypted')
+
+class FolderForm(forms.ModelForm):
+    class Meta:
+        model = Folder
+        exclude = ('user',)
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")
