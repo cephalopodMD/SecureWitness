@@ -10,18 +10,18 @@ from datetime import datetime
 from SecureWitness import settings
 
 def home(request):
-    # Create a list of all visible reports
+    # Create a list of all public reports
     reports = Report.objects.filter(private=False)
+    # Pass the list of reports to the context dictionary
+    context_dict = {'reports': reports}
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/home.html', {'reports': reports})
+    return render(request, 'app/home.html', context_dict)
 
 def register(request):
-
+    # Create a flag to determine if the user has registered
     registered = False
 
-    # HTTP POST: Process form data
     if request.method == 'POST':
-        # Attempt to grab information from the raw form object
         user_form = UserForm(request.POST)
         # Check if the form is valid
         if user_form.is_valid():
@@ -69,16 +69,12 @@ def register(request):
 
 def user_login(request):
 
-    # HTTP POST: Process form data
     if request.method == 'POST':
-
         # Grab information about the user's credentials
         username = request.POST.get('username')
         password = request.POST.get('password')
-
         # Validate the user's credentials
         currUser = authenticate(username=username, password=password)
-
         # Check if the user's credentials were valid
         if currUser:
             # Check if the user account is active
@@ -94,8 +90,6 @@ def user_login(request):
             # Bad login details were provided
             print("Invalid login details: {0}, {1}".format(username, password))
             return HttpResponse("Invalid login details supplied.")
-
-    # HTTP GET: Render the login page
     else:
         # No context variables to pass to the template system
         return render(request, 'app/login.html', {})
@@ -104,7 +98,6 @@ def user_login(request):
 def user_logout(request):
     # Since we know the user is logged in, we can now just log them out.
     logout(request)
-
     # Take the user back to the homepage.
     return HttpResponseRedirect('/app/')
 
@@ -113,7 +106,6 @@ def delete_account(request, user_name_slug):
 
     # Obtain information about the user attempting to view the page
     currUser = request.user
-
     # Check if the requested home page belongs to the current user
     if currUser.username != user_name_slug:
         # Tell the user that the page is restricted
@@ -420,5 +412,18 @@ def add_folder(request, user_name_slug):
 
     return render(request, 'app/add_folder.html', context_dict)
 
+@login_required
 def delete_folder(request, user_name_slug, folder_slug):
-    print()
+
+    # Obtain information about the user and report
+    currUser = request.user
+    folder = Folder.objects.filter(user = currUser, name = folder_slug)
+    reports = Report.objects.filter(folder=folder)
+
+    for r in reports:
+        delete_report(request, user_name_slug, r.id)
+
+    folder.delete()
+    os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder_slug))
+
+    return HttpResponseRedirect('/app/user/'+currUser.username+'/')
