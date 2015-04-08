@@ -338,53 +338,34 @@ def search(request):
 
 @login_required
 def folder(request, user_name_slug, folder_slug):
-    # Obtain information about the user attempting to view the page
-    currUser = request.user
 
-    # Check if the requested home page belongs to the current user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser,user_name_slug):
         return HttpResponse("You are not authorized to view this page")
 
-    context_dict = {}
-
-    # Place the user's username in the context dictionary
-    context_dict['user'] = currUser
-
-    # Retrieve all of the associated reports
-    # Note that filter returns >= 1 model instance
-    folder = Folder.objects.filter(user=currUser, slug=folder_slug)
+    # Retrieve all of the user's reports that are stored in the given folder
+    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
     reports = Report.objects.filter(user=currUser, folder=folder)
 
-    context_dict['reports'] = reports
-
-    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
-    context_dict['folder'] = folder
-
-    return render(request, 'app/folder.html', context_dict)
+    return render(request, 'app/folder.html', {'user': currUser, 'folder': folder, 'reports': reports})
 
 @login_required
 def add_folder(request, user_name_slug):
 
-    # Obtain information about the user attempting to view the page
+    # Validate that the user has access
     currUser = request.user
-
-    # Check if the requested home page belongs to the current user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser,user_name_slug):
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
         form = FolderForm(request.POST)
-
-        # Have we been provided with a valid form?
         if form.is_valid():
             folder = form.save(commit=False)
-            # Set the user and timestamp
+            # Set fields not specified by form
             folder.user = currUser
-            # Other information should already be created
             folder.save()
-            # Return the user back to their homepage
+            # Create a corresponding folder in the file system
             os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username,folder.name))
             return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
@@ -392,22 +373,26 @@ def add_folder(request, user_name_slug):
     else:
         form = FolderForm()
 
-    context_dict = {'form':form, 'user': currUser}
-
-    return render(request, 'app/add_folder.html', context_dict)
+    return render(request, 'app/add_folder.html', {'form': form, 'user': currUser})
 
 @login_required
 def delete_folder(request, user_name_slug, folder_slug):
 
-    # Obtain information about the user and report
+    # Validate that the user has access
     currUser = request.user
-    folder = Folder.objects.filter(user = currUser, slug = folder_slug).first()
+    if not hasAccess(currUser,user_name_slug):
+        return HttpResponse("You are not authorized to view this page")
+
+    # Obtain information about the folder and reports
+    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
     reports = Report.objects.filter(folder=folder)
 
+    # Delete each of the reports
     for report in reports:
         delete_report(request, user_name_slug, report.id)
-
+    # Remove the folder from the database
     folder.delete()
+    # Remove the folder from the file system
     os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder.name))
 
     return HttpResponseRedirect('/app/user/'+currUser.username+'/')
@@ -466,9 +451,7 @@ def move_report(request, user_name_slug, report_slug):
     else:
         form = CopyMoveReportForm()
 
-    context_dict = {'form':form, 'user': currUser, 'report': report, 'move': True}
-
-    return render(request, 'app/copymove_report.html', context_dict)
+    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report, 'move': True})
 
 @login_required
 def copy_report(request, user_name_slug, report_slug):
@@ -528,6 +511,4 @@ def copy_report(request, user_name_slug, report_slug):
     else:
         form = CopyMoveReportForm()
 
-    context_dict = {'form':form, 'user': currUser, 'report': report}
-
-    return render(request, 'app/copymove_report.html', context_dict)
+    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})

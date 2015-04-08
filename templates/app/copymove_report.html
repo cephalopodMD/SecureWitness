@@ -5,7 +5,11 @@
     </head>
 
     <body>
-        <h1>Create a Folder</h1>
+        {% if move %}
+            <h1>Move Report</h1>
+        {% else %}
+            <h1>Copy Report</h1>
+        {% endif %}
 
         <!-- This line determines whether to call the add_report or edit_report view -->
         <form id="folder_form" method="post" {% if move %} action="/app/user/{{user.username}}/report/{{ report.id }}/move/" {% else %} action="/app/user/{{user.username}}/report/{{ report.id }}/copy/" {% endif %}/>
