@@ -16,7 +16,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Attachment',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', auto_created=True, serialize=False, primary_key=True)),
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
                 ('file', models.FileField(upload_to=app.models.get_upload_path)),
                 ('encrypted', models.BooleanField(default=False)),
             ],
@@ -27,8 +27,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Folder',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', auto_created=True, serialize=False, primary_key=True)),
-                ('name', models.CharField(help_text='Folder Name', max_length=128)),
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
+                ('name', models.CharField(max_length=128, help_text='Folder Name')),
                 ('slug', models.SlugField()),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
@@ -39,15 +39,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Report',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', auto_created=True, serialize=False, primary_key=True)),
+                ('id', models.AutoField(serialize=False, primary_key=True, auto_created=True, verbose_name='ID')),
                 ('timeCreated', models.DateTimeField(verbose_name='Time created')),
-                ('shortDesc', models.CharField(help_text='Short description', max_length=128)),
+                ('shortDesc', models.CharField(max_length=128, help_text='Short description')),
                 ('detailedDesc', models.TextField(help_text='Detailed description')),
-                ('location', models.CharField(help_text='Location (optional)', max_length=128, blank=True)),
-                ('dateOfIncident', models.DateField(null=True, help_text='Date of incident (optional)', blank=True)),
-                ('keywords', models.CharField(help_text='Keywords (optional)', max_length=128, blank=True)),
+                ('location', models.CharField(max_length=128, blank=True, help_text='Location (optional)')),
+                ('dateOfIncident', models.DateField(blank=True, help_text='Date of incident (optional)', null=True)),
+                ('keywords', models.CharField(max_length=128, blank=True, help_text='Keywords (optional)')),
                 ('private', models.BooleanField(default=False, help_text='Private')),
-                ('folder', models.ForeignKey(null=True, default=None, blank=True, to='app.Folder')),
+                ('folder', models.ForeignKey(to='app.Folder', blank=True, default=None, null=True)),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={

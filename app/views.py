@@ -1,4 +1,5 @@
 import os, shutil
+from django.core.files import File
 from django.shortcuts import render
 from app.models import Report, Attachment, Folder
 from app.encryption import encrypt_file
@@ -150,7 +151,7 @@ def user(request, user_name_slug):
     return render(request, 'app/user.html', context_dict)
 
 @login_required
-def add_report(request, user_name_slug):
+def add_report(request, user_name_slug, folder_slug=None):
 
     # Obtain information about the user attempting to view the page
     currUser = request.user
@@ -159,6 +160,8 @@ def add_report(request, user_name_slug):
     if currUser.username != user_name_slug:
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
+
+    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
 
     if request.method == 'POST':
         form = ReportForm(request.POST)
@@ -170,16 +173,21 @@ def add_report(request, user_name_slug):
             report.user = currUser
             report.timeCreated = datetime.now()
             report.folder = None
+            if folder_slug:
+                report.folder = folder
             # Other information should already be created
             report.save()
             # Return the user back to their homepage
-            return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+            if folder:
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder_slug+'/')
+            else:
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             print(form.errors)
     else:
         form = ReportForm()
 
-    context_dict = {'form':form, 'user': currUser}
+    context_dict = {'form':form, 'user': currUser, 'folder': folder}
 
     return render(request, 'app/add_report.html', context_dict)
 
@@ -229,7 +237,10 @@ def edit_report(request, user_name_slug, report_slug=None):
             # Save the report to the database
             form.save()
             # Return the user back to their homepage
-            return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+            if report.folder:
+                return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
+            else:
+                return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:
             print(form.errors)
     else:
@@ -274,6 +285,7 @@ def add_file(request, report_slug=None):
                 oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(attachment))
                 newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, report.folder.name, str(attachment))
                 os.rename(oldLocation,newLocation)
+                return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
 
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:
@@ -297,6 +309,8 @@ def delete_report(request, user_name_slug, report_slug):
         # Tell the user that the page is restricted
         return HttpResponse("You are not authorized to view this page")
 
+    folder = report.folder
+
     # Find the list of files associated with the report
     files = Attachment.objects.filter(report=report)
     # Remove each of the files from memory
@@ -304,7 +318,12 @@ def delete_report(request, user_name_slug, report_slug):
         os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f.file)))
         f.delete()
     report.delete()
-    return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+
+    if folder:
+        return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+folder.slug+'/')
+    else:
+        return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+
 
 @login_required
 def delete_file(request, report_slug, file_slug):
@@ -321,9 +340,9 @@ def delete_file(request, report_slug, file_slug):
     # Need to edit this for folders
     folder = report.folder
     if folder:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(folder), str(f.file)))
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f)))
     else:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f.file)))
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f)))
     f.delete()
 
     return HttpResponseRedirect('/app/report/'+report_slug)
@@ -387,6 +406,9 @@ def folder(request, user_name_slug, folder_slug):
 
     context_dict['reports'] = reports
 
+    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
+    context_dict['folder'] = folder
+
     return render(request, 'app/folder.html', context_dict)
 
 @login_required
@@ -430,8 +452,8 @@ def delete_folder(request, user_name_slug, folder_slug):
     folder = Folder.objects.filter(user = currUser, slug = folder_slug).first()
     reports = Report.objects.filter(folder=folder)
 
-    for r in reports:
-        delete_report(request, user_name_slug, r.id)
+    for report in reports:
+        delete_report(request, user_name_slug, report.id)
 
     folder.delete()
     os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder.name))
@@ -459,11 +481,15 @@ def move_report(request, user_name_slug, report_slug):
                 return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
             else:
                 folder = Folder.objects.filter(name=dest).first()
+                oldFolder = report.folder
+                oldRoot = os.path.join(settings.MEDIA_ROOT, currUser.username)
+                if oldFolder:
+                    oldRoot = os.path.join(oldRoot, oldFolder.name)
                 report.folder = folder
                 report.save()
                 files = Attachment.objects.filter(report=report)
                 for f in files:
-                    oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
+                    oldLocation = os.path.join(oldRoot, str(f))
                     newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
                     os.rename(oldLocation,newLocation)
                     f.file.name = os.path.join(settings.MEDIA_ROOT, user_name_slug, folder.name, str(f))
@@ -489,5 +515,67 @@ def move_report(request, user_name_slug, report_slug):
         form = CopyMoveReportForm()
 
     context_dict = {'form':form, 'user': currUser, 'report': report, 'move': True}
+
+    return render(request, 'app/copymove_report.html', context_dict)
+
+@login_required
+def copy_report(request, user_name_slug, report_slug):
+
+    # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        dest = request.POST.get('dest', None)
+        if dest:
+            # User entered a folder name
+            if report.folder and report.folder.name == dest:
+                # Destination = current location
+                return HttpResponse("This report already exists in the given location")
+            else:
+                folder = Folder.objects.filter(user=currUser,name=dest).first()
+                old_files = Attachment.objects.filter(report=report)
+                newReport = report
+                newReport.pk = None
+                newReport.save()
+                newReport.folder = folder
+                newReport.save()
+                for old_file in old_files:
+                    new_file = Attachment()
+                    new_file.user = currUser
+                    new_file.report = newReport
+                    new_file.encrypted = old_file.encrypted
+                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, os.path.split(old_file.file.name)[1]))
+                    new_file.save()
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder.slug+'/')
+        else:
+            # User entered the home folder
+            if not report.folder:
+                # Destination = current location
+                return HttpResponse("This report already exists in the given location")
+            else:
+                old_files = Attachment.objects.filter(report=report)
+                newReport = report
+                newReport.pk = None
+                newReport.save()
+                newReport.folder = None
+                newReport.save()
+                for old_file in old_files:
+                    new_file = Attachment()
+                    new_file.user = currUser
+                    new_file.report = newReport
+                    new_file.encrypted = old_file.encrypted
+                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, os.path.split(old_file.file.name)[1]))
+                    new_file.save()
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+    else:
+        form = CopyMoveReportForm()
+
+    context_dict = {'form':form, 'user': currUser, 'report': report}
 
     return render(request, 'app/copymove_report.html', context_dict)

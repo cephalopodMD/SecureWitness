@@ -8,7 +8,7 @@
         <h1>Create a Folder</h1>
 
         <!-- This line determines whether to call the add_report or edit_report view -->
-        <form id="folder_form" method="post" action="/app/user/{{user.username}}/report/{{ report.id }}/move/"/>
+        <form id="folder_form" method="post" {% if move %} action="/app/user/{{user.username}}/report/{{ report.id }}/move/" {% else %} action="/app/user/{{user.username}}/report/{{ report.id }}/copy/" {% endif %}/>
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}
@@ -23,7 +23,7 @@
             {% endfor %}
 
             <!-- This line determines whether to display a "File Report" or a "Save" button -->
-            <br/><input type="submit" value="Move"/> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
+            <br/><input type="submit" value="Done"/> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
     </body>
 

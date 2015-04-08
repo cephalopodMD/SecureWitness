@@ -13,8 +13,10 @@ urlpatterns = patterns('',
     url(r'^user/(?P<user_name_slug>[\w\-]+)/$', views.user, name='user'),
 
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),
-    url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/edit$', views.edit_report, name='edit report'),
+    url(r'^user/(?P<user_name_slug>[\w\-]+)/folder/(?P<folder_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),
+    url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/edit/$', views.edit_report, name='edit report'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/move', views.move_report, name='move report'),
+    url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/copy', views.copy_report, name='copy report'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/delete$', views.delete_report, name='delete report'),
     url(r'^report/(?P<report_slug>[\w\-]+)/$', views.report, name='view report'),
 

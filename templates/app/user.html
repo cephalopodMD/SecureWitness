@@ -6,7 +6,7 @@
 
     <body>
         <!-- Displays the user's username as a header -->
-        <h1>{{ user.username }}</h1>
+        <h1>{{ user.username }}: Home</h1>
         <p>
             <a href="/app/">SecureWitness Home</a>
              |
@@ -43,6 +43,8 @@
                     <a href="/app/report/{{ report.id }}/">View Report</a>
                      |
                     <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
+                     |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/copy">Copy report</a>
                      |
                     <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
                      |
