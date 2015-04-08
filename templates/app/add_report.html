@@ -8,7 +8,7 @@
         <h1>File a Report</h1>
 
         <!-- This line determines whether to call the add_report or edit_report view -->
-        <form id="report_form" method="post" {% if report %} action="/app/user/{{ user.username }}/report/{{ report.id }}/edit/" {% elif folder %} action="/app/user/{{ user.username }}/folder/{{ folder.slug }}/add_report/" {% else %} action="/app/user/{{user.username}}/add_report/" {% endif %}/>
+        <form id="report_form" method="post" {% if report %} action="/app/user/{{ user.username }}/report/{{report.id}}/edit/" {% elif folder_slug %} action="/app/user/{{ user.username }}/folder/{{folder_slug}}/add_report/" {% else %} action="/app/user/{{user.username}}/add_report/" {% endif %}/>
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}

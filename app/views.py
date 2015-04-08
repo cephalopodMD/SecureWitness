@@ -10,21 +10,28 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
 
+def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
+    if user_name_slug and currUser.username != user_name_slug:
+        return False
+    if report_slug:
+        report = Report.objects.filter(id=report_slug).first()
+        if not report:
+            return False
+        if report.private and report.user != currUser:
+            return False
+        if edit and report.user != currUser:
+            return False
+    return True
+
 def home(request):
     # Create a list of all public reports
     reports = Report.objects.filter(private=False)
-    # Pass the list of reports to the context dictionary
-    context_dict = {'reports': reports}
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/home.html', context_dict)
+    return render(request, 'app/home.html', {'reports': reports})
 
 def register(request):
-    # Create a flag to determine if the user has registered
-    registered = False
-
     if request.method == 'POST':
         user_form = UserForm(request.POST)
-        # Check if the form is valid
         if user_form.is_valid():
             # Save the user's form data to the database
             currUser = user_form.save()
@@ -32,8 +39,6 @@ def register(request):
             currUser.set_password(currUser.password)
             # Update the user object
             currUser.save()
-            # Indicate that the user has successfully registered
-            registered = True
             # Grab information about the user's credentials
             username = request.POST.get('username')
             password = request.POST.get('password')
@@ -56,20 +61,14 @@ def register(request):
                 # Bad login details were provided
                 print("Invalid login details: {0}, {1}".format(username, password))
                 return HttpResponse("Invalid login details supplied.")
-
-        # Invalid form - prints problems to the terminal
         else:
             print(user_form.errors)
-
-    # HTTP GET: Render the form using a ModelForm instance
     else:
         user_form = UserForm()
 
-    # Render the template depending on the context
-    return render(request, 'app/register.html', {'user_form': user_form, 'registered': registered})
+    return render(request, 'app/register.html', {'user_form': user_form})
 
 def user_login(request):
-
     if request.method == 'POST':
         # Grab information about the user's credentials
         username = request.POST.get('username')
@@ -97,178 +96,133 @@ def user_login(request):
 
 @login_required
 def user_logout(request):
-    # Since we know the user is logged in, we can now just log them out.
+    # Log the user out
     logout(request)
-    # Take the user back to the homepage.
+    # Take the user back to the homepage
     return HttpResponseRedirect('/app/')
 
 @login_required
 def delete_account(request, user_name_slug):
 
-    # Obtain information about the user attempting to view the page
+    # Validate that the user has access
     currUser = request.user
-    # Check if the requested home page belongs to the current user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser,user_name_slug):
         return HttpResponse("You are not authorized to view this page")
 
     # Set the user's account to inactive
     currUser.is_active = False
     currUser.save();
 
-   # Log the user out of their account
+    # Log the user out of their account
     return user_logout(request)
 
 @login_required
 def user(request, user_name_slug):
 
-    # Obtain information about the user attempting to view the page
+    # Validate that the user has access
     currUser = request.user
-
-    # Check if the requested home page belongs to the current user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser,user_name_slug):
         return HttpResponse("You are not authorized to view this page")
 
-    # Create a context dictionary which we can pass to the template
-    context_dict = {}
-
-    # Place the user's username in the context dictionary
-    context_dict['user'] = currUser
-
-    # Retrieve all of the associated reports
-    # Note that filter returns >= 1 model instance
+    # Retrieve all of the user's reports that are not stored in folders
     reports = Report.objects.filter(user=currUser, folder=None)
-    files = Attachment.objects.filter(user=currUser)
+    # Retrieve all of the user's folders
     folders = Folder.objects.filter(user=currUser)
 
-    # Adds our results list to the template context under name reports
-    context_dict['reports'] = reports
-    context_dict['files'] = files
-    context_dict['folders'] = folders
-
-    # Go render the response and return it to the client.
-    return render(request, 'app/user.html', context_dict)
+    return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
 
 @login_required
 def add_report(request, user_name_slug, folder_slug=None):
 
-    # Obtain information about the user attempting to view the page
+    # Validate that the user has access
     currUser = request.user
-
-    # Check if the requested home page belongs to the current user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser,user_name_slug):
         return HttpResponse("You are not authorized to view this page")
-
-    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
 
     if request.method == 'POST':
         form = ReportForm(request.POST)
-
-        # Have we been provided with a valid form?
         if form.is_valid():
             report = form.save(commit=False)
-            # Set the user and timestamp
+            # Set fields not specified by the form
             report.user = currUser
             report.timeCreated = datetime.now()
-            report.folder = None
+            # Specify whether the report should be placed in a folder
             if folder_slug:
+                folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
                 report.folder = folder
-            # Other information should already be created
-            report.save()
-            # Return the user back to their homepage
-            if folder:
+                report.save()
                 return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder_slug+'/')
             else:
+                report.folder = None
+                report.save()
                 return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             print(form.errors)
     else:
         form = ReportForm()
 
-    context_dict = {'form':form, 'user': currUser, 'folder': folder}
-
-    return render(request, 'app/add_report.html', context_dict)
+    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'folder_slug': folder_slug})
 
 @login_required
 def report(request, report_slug):
 
-    # Obtain information about the user attempting to view the page
+    # Validate that the user has access
     currUser = request.user
-    currReport = Report.objects.filter(id=report_slug).first()
-    files = Attachment.objects.filter(report=currReport)
-
-    # Ensure that the report exists
-    if not currReport:
+    if not hasAccess(currUser, None, None, report_slug):
         return HttpResponse("You are not authorized to view this page")
 
-    if currReport.private and currReport.user != currUser:
-        return HttpResponse("You are not authorized to view this page")
+    # Obtain information about the specified report
+    report = Report.objects.filter(id=report_slug).first()
+    files = Attachment.objects.filter(report=report)
 
-    context_dict = {}
-    context_dict['user'] = currUser
-    context_dict['report'] = currReport
-    context_dict['files'] = files
-
-    return render(request, 'app/report.html', context_dict)
+    """ *** This passes in the current user --> Not the report's creator *** """
+    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files})
 
 @login_required
 def edit_report(request, user_name_slug, report_slug=None):
 
-    # Check if the requested home page belongs to the current user
+    # Validate that the user has access
     currUser = request.user
-    if currUser.username != user_name_slug:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
         return HttpResponse("You are not authorized to view this page")
 
     report = Report.objects.filter(id=report_slug).first()
 
-    # Check if the requested report does not exist or belongs to the current user
-    if not report or currUser != report.user:
-        # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
-
     if request.method == 'POST':
         form = ReportForm(request.POST, instance=report)
-
-        # Have we been provided with a valid form?
         if form.is_valid():
-            # Save the report to the database
             form.save()
             # Return the user back to their homepage
             if report.folder:
-                return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+report.folder.slug+'/')
             else:
-                return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             print(form.errors)
     else:
         form = ReportForm(instance=report)
 
-    context_dict = {'form':form, 'user': currUser, 'report': report}
-
-    return render(request, 'app/add_report.html', context_dict)
+    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'report': report})
 
 @login_required
 def add_file(request, report_slug=None):
 
-    # Obtain information about the user and report
+    # Validate that the user has access
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
-
-    # Check if the requested report does not exist or belong to the current user
-    if not report or currUser != report.user:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser, None, None, report_slug, True):
         return HttpResponse("You are not authorized to view this page")
+
+    report = Report.objects.filter(id=report_slug).first()
 
     if request.method == 'POST':
         form = AttachmentForm(request.POST, request.FILES)
         if form.is_valid():
             attachment = form.save(commit=False)
+            # Set fields not specified by the form
             attachment.user = currUser
             attachment.report = report
             attachment.save()
+            # Encrypt the file if necessary
             key = request.POST.get('key', None)
             if key:
                 # Find the name of the original file
@@ -281,73 +235,70 @@ def add_file(request, report_slug=None):
                 os.remove(fileName)
                 # Save updates to the database
                 attachment.save()
+            # Update the file's location in memory if necessary
             if report.folder:
                 oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(attachment))
                 newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, report.folder.name, str(attachment))
                 os.rename(oldLocation,newLocation)
                 return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
-
             return HttpResponseRedirect('/app/user/'+currUser.username+'/')
         else:
             print(form.errors)
     else:
         form = AttachmentForm()
 
-    context_dict = {'form': form, 'user': currUser, 'report': report}
-
-    return render(request, 'app/files.html', context_dict)
+    return render(request, 'app/files.html', {'form': form, 'user': currUser, 'report': report})
 
 @login_required
 def delete_report(request, user_name_slug, report_slug):
 
-    # Obtain information about the user and report
+    # Validate that the user has access
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
-
-    # Check if the report does not belong to the current user
-    if currUser != report.user:
-        # Tell the user that the page is restricted
+    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
         return HttpResponse("You are not authorized to view this page")
 
-    folder = report.folder
-
-    # Find the list of files associated with the report
+    # Access information about the given report
+    report = Report.objects.filter(id=report_slug).first()
     files = Attachment.objects.filter(report=report)
-    # Remove each of the files from memory
-    for f in files:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f.file)))
-        f.delete()
+
+    for file in files:
+        # Remove the file from memory
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
+        # Remove the file from the database
+        file.delete()
+    # Remove the report from the database
     report.delete()
 
-    if folder:
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+folder.slug+'/')
+    # Redirect the user to the appropriate page
+    if report.folder:
+        return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
     else:
         return HttpResponseRedirect('/app/user/'+currUser.username+'/')
 
-
 @login_required
 def delete_file(request, report_slug, file_slug):
-    # Obtain information about the user and report
-    currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
-    f = Attachment.objects.filter(id=file_slug).first()
 
-    # Check if the report does not belong to the current user
-    if currUser != report.user:
-        # Tell the user that the page is restricted
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser, None, None, report_slug, True):
         return HttpResponse("You are not authorized to view this page")
 
-    # Need to edit this for folders
-    folder = report.folder
+    # Access information about the given file
+    file = Attachment.objects.filter(id=file_slug).first()
+
+    # Determine where the file is stored in the file system
+    folder = file.report.folder
+    # Remove the file from the file system
     if folder:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f)))
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(file)))
     else:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(f)))
-    f.delete()
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file)))
+    # Remove the file from the database
+    file.delete()
 
     return HttpResponseRedirect('/app/report/'+report_slug)
 
-
+@login_required
 def search(request):
     if request.method == 'POST':
         reports = Report.objects.filter(private=False)
@@ -385,6 +336,7 @@ def search(request):
 
     return render(request, 'app/search.html', {'form': form})
 
+@login_required
 def folder(request, user_name_slug, folder_slug):
     # Obtain information about the user attempting to view the page
     currUser = request.user

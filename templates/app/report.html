@@ -5,23 +5,26 @@
     </head>
 
     <body>
+        <h1>Reported by {{report.user.username}} on {{report.timeCreated}}</h1>
         <p><strong>Short description:</strong> {{report.shortDesc}}</p>
         <p><strong>Detailed description:</strong> {{report.detailedDesc}}</p>
         <p><strong>Date of Incident:</strong> {{report.dateOfIncident}}</p>
         <p><strong>Location:</strong> {{report.location}}</p>
-        <p><strong>ID:</strong> {{report.id}}</p>
-        <p><strong>Time Created:</strong> {{report.timeCreated}}</p>
         <p><strong>Private:</strong> {{report.private}}</p>
         {% if files %}
-            {% for f in files %}
-                {{ f }}<br/>
-                <a href="/media/{{ user.username }}/{{ f }}">Download</a>
-                {% if f.user == user %}
-                    | <a href="/app/report/{{report.id}}/files/{{f.id}}/delete">Remove</a><br/>
-                {% endif %}
-            {% endfor %}
-        {% else %}
-            <p><strong>Attachments:</strong> None</p>
+        <p><strong>Attachments:</strong></p>
+        {% for file in files %}
+            {{ file }}<br/>
+            {% if report.folder %}
+                <a href="/media/{{report.user.username}}/{{report.folder.name}}/{{file}}">Download</a>
+            {% else %}
+                <a href="/media/{{report.user.username}}/{{file}}">Download</a>
+            {% endif %}
+            {% if file.user == user %}
+                 | <a href="/app/report/{{report.id}}/files/{{file.id}}/delete">Remove</a>
+            {% endif %}
+            <br/>
+        {% endfor %}
         {% endif %}
     </body>
 
