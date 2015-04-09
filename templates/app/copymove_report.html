@@ -11,7 +11,6 @@
             <h1>Copy Report</h1>
         {% endif %}
 
-        <!-- This line determines whether to call the add_report or edit_report view -->
         <form id="folder_form" method="post" {% if move %} action="/app/user/{{user.username}}/report/{{ report.id }}/move/" {% else %} action="/app/user/{{user.username}}/report/{{ report.id }}/copy/" {% endif %}/>
 
             {% csrf_token %}
@@ -26,7 +25,6 @@
                 <br />
             {% endfor %}
 
-            <!-- This line determines whether to display a "File Report" or a "Save" button -->
             <br/><input type="submit" value="Done"/> <button type="button" onclick="window.location = '/app/user/{{user.username}}/'">Cancel</button>
         </form>
     </body>

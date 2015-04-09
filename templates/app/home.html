@@ -16,9 +16,13 @@
              |
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
             </p>
-            <p>
-            <a href="/app/search/">Search for Reports</a>
-            </p>
+
+            <p>Search for Reports</p>
+            <form id="login_form" method="post" action="/app/login/">
+                {% csrf_token %}
+                <input type="text" name="search" value="" size="50" /> <input type="submit" value="search" />
+            </form>
+            <p><a href="/app/search/">Advanced Search</a></p>
 
             {% if reports %}
 

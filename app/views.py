@@ -300,39 +300,43 @@ def delete_file(request, report_slug, file_slug):
 
 @login_required
 def search(request):
+
     if request.method == 'POST':
         reports = Report.objects.filter(private=False)
+        basic_text = request.POST.get('search')
+        if basic_text:
+            # POST request from basic search
+            return render(request, 'app/home.html', {'reports': reports})
+        else:
+            # POST request from advanced search
+            short = request.POST.get('shortDesc', None)
+            if short:
+                shortWords = short.split()
+                for word in shortWords:
+                    reports = reports.filter(shortDesc__icontains=word)
+            long = request.POST.get('detailedDesc', None)
+            if long:
+                longWords = long.split()
+                for word in longWords:
+                    reports = reports.filter(detailedDesc__icontains=word)
 
-        short = request.POST.get('shortDesc', None)
-        if short:
-            shortWords = short.split()
-            for word in shortWords:
-                reports = reports.filter(shortDesc__icontains=word)
+            keywords = request.POST.get('keywords', None)
+            if keywords:
+                keywordWords = keywords.split()
+                for word in keywordWords:
+                    reports = reports.filter(keywords__icontains=word)
 
-        long = request.POST.get('detailedDesc', None)
-        if long:
-            longWords = long.split()
-            for word in longWords:
-                reports = reports.filter(detailedDesc__icontains=word)
+            location = request.POST.get('location', None)
+            if location:
+                reports = reports.filter(location__icontains=location)
 
-        keywords = request.POST.get('keywords', None)
-        if keywords:
-            keywordWords = keywords.split()
-            for word in keywordWords:
-                reports = reports.filter(keywords__icontains=word)
+            dateOfIncident = request.POST.get('dateOfIncident', None)
+            if dateOfIncident:
+                reports = reports.filter(dateOfIndicent=dateOfIncident)
 
-        location = request.POST.get('location', None)
-        if location:
-            reports = reports.filter(location__icontains=location)
-
-        dateOfIncident = request.POST.get('dateOfIncident', None)
-        if dateOfIncident:
-            reports = reports.filter(dateOfIndicent=dateOfIncident)
-
-        return render(request, 'app/home.html', {'reports': reports})
-
+            return render(request, 'app/home.html', {'reports': reports})
     else:
-       form = SearchForm()
+        form = SearchForm()
 
     return render(request, 'app/search.html', {'form': form})
 
