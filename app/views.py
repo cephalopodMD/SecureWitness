@@ -421,7 +421,7 @@ def move_report(request, user_name_slug, report_slug):
                 # Destination = current location
                 return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
             else:
-                folder = Folder.objects.filter(name=dest).first()
+                folder = Folder.objects.filter(user=currUser,id=dest).first()
                 oldFolder = report.folder
                 oldRoot = os.path.join(settings.MEDIA_ROOT, currUser.username)
                 if oldFolder:
@@ -454,6 +454,7 @@ def move_report(request, user_name_slug, report_slug):
 
     else:
         form = CopyMoveReportForm()
+        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report, 'move': True})
 
@@ -477,7 +478,7 @@ def copy_report(request, user_name_slug, report_slug):
                 # Destination = current location
                 return HttpResponse("This report already exists in the given location")
             else:
-                folder = Folder.objects.filter(user=currUser,name=dest).first()
+                folder = Folder.objects.filter(user=currUser,id=dest).first()
                 old_files = Attachment.objects.filter(report=report)
                 newReport = report
                 newReport.pk = None
@@ -514,5 +515,6 @@ def copy_report(request, user_name_slug, report_slug):
                 return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
     else:
         form = CopyMoveReportForm()
+        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})
