@@ -237,6 +237,7 @@ def add_file(request, report_slug=None):
             # Set fields not specified by the form
             attachment.user = currUser
             attachment.report = report
+            attachment.report = report
             attachment.save()
             # Encrypt the file if necessary
             key = request.POST.get('key', None)

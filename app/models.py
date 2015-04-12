@@ -28,7 +28,7 @@ class Folder(models.Model):
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
     user = models.ForeignKey(User)
-    group = models.ForeignKey(Group, blank=True, null=True, default=None)
+    groups = models.ManyToManyField(Group, blank=True, null=True, default=None)
     folder = models.ForeignKey(Folder, blank=True, null=True, default=None)
     shortDesc = models.CharField(max_length=128, help_text="Short description")
     detailedDesc = models.TextField(help_text="Detailed description")
