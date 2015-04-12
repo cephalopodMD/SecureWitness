@@ -128,7 +128,7 @@ def user(request, user_name_slug):
     # Retrieve all of the user's reports that are not stored in folders
     reports = Report.objects.filter(user=currUser, folder=None)
     # Retrieve all of the user's folders
-    folders = Folder.objects.filter(user=currUser, group=None)
+    folders = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
 
@@ -138,8 +138,8 @@ def group(request, group_id):
     # Validate that the user has access
     currUser = request.user
     # Get current group
-    currGroup = Group.objects.filter(group=group_id)
-    if not Group.objects.filter(group=currGroup, user=currUser):
+    currGroup = Group.objects.filter(id=group_id).first()
+    if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
 
     # Retrieve all of the user's reports that are not stored in folders
@@ -365,7 +365,7 @@ def folder(request, user_name_slug, folder_slug):
         return HttpResponse("You are not authorized to view this page")
 
     # Retrieve all of the user's reports that are stored in the given folder
-    folder = Folder.objects.filter(user=currUser, slug=folder_slug, group=None).first()
+    folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
     reports = Report.objects.filter(user=currUser, folder=folder)
 
     return render(request, 'app/folder.html', {'user': currUser, 'folder': folder, 'reports': reports})
