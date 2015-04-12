@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='report',
             name='group',
-            field=models.ForeignKey(default=None, blank=True, to='auth.Group', null=True),
+            field=models.ForeignKey(to='auth.Group', null=True, blank=True, default=None),
             preserve_default=True,
         ),
     ]

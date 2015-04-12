@@ -17,7 +17,7 @@
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
         </p>
         <p>
-            <a href="/app/group/{{ group.name }}/add_report/">File a New Report</a>
+            <a href="/app/group/{{ group.id }}/add_report/">File a New Report</a>
         </p>
         {% if reports %}
             <p><strong>Reports</strong></p>
@@ -28,15 +28,7 @@
                     <a href="/app/report/{{ report.id }}/">View Report</a>
                     {% if report.user == user %}
                          |
-                        <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
-                         |
-                        <a href="/app/user/{{ user.username }}/report/{{ report.id }}/copy">Copy report</a>
-                         |
-                        <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
-                         |
-                        <a href="/app/report/{{ report.id }}/files">Attach Files</a>
-                         |
-                        <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
+                        <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Remove report</a>
                     {% endif %}
                 </li>
                 {% endfor %}
