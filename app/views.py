@@ -4,7 +4,7 @@ from django.core.files import File
 from django.shortcuts import render
 from app.models import Report, Attachment, Folder
 from app.encryption import encrypt_file
-from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm, FolderForm, CopyMoveReportForm
+from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm, FolderForm, CopyMoveReportForm, ShareReportForm
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -143,7 +143,7 @@ def group(request, group_id):
         return HttpResponse("You are not authorized to view this page")
 
     # Retrieve all of the user's reports that are not stored in folders
-    reports = Report.objects.filter(group=currGroup)
+    reports = currGroup.report_set.all()
 
     return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup})
 
@@ -535,3 +535,44 @@ def copy_report(request, user_name_slug, report_slug):
         form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})
+
+def share_report(request, user_name_slug, report_slug):
+
+    # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        dest = request.POST.get('dest', None)
+        destGroup = Group.objects.filter(id=dest).first()
+        report.groups.add(destGroup)
+        report.save()
+        return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+    else:
+        form = ShareReportForm()
+        form.fields['dest'].queryset = currUser.groups.all()
+
+    return render(request, 'app/share_report.html', {'form': form, 'user': currUser, 'report': report})
+
+def remove_report(request, group_id, report_slug):
+
+    # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    currGroup = Group.objects.filter(id=group_id).first()
+
+    report.groups.remove(currGroup)
+    report.save()
+
+    return HttpResponseRedirect('/app/group/'+group_id+'/')
