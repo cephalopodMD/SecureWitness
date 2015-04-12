@@ -1,4 +1,5 @@
 import os, shutil
+from django.contrib.auth.models import Group
 from django.core.files import File
 from django.shortcuts import render
 from app.models import Report, Attachment, Folder
@@ -130,6 +131,21 @@ def user(request, user_name_slug):
     folders = Folder.objects.filter(user=currUser, group=None)
 
     return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
+
+@login_required
+def group(request, group_id):
+
+    # Validate that the user has access
+    currUser = request.user
+    # Get current group
+    currGroup = Group.objects.filter(group=group_id)
+    if not Group.objects.filter(group=currGroup, user=currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    # Retrieve all of the user's reports that are not stored in folders
+    reports = Report.objects.filter(group=currGroup)
+
+    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup})
 
 @login_required
 def add_report(request, user_name_slug, folder_slug=None):

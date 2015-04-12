@@ -61,7 +61,7 @@ def decrypt_file(key, in_filename, chunksize=1024):
         out_filename will be 'aaa.zip')
     """
 
-    # Determine the name of the decrypted file
+    # Determine the name of the decrypted filer
     out_filename = os.path.splitext(in_filename)[0]
 
     # Lengthen the decryption key if necessary
