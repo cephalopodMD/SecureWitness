@@ -1,5 +1,5 @@
 from django import forms
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from app.models import Report, Attachment, Folder
 from django.forms.extras.widgets import SelectDateWidget
 
@@ -42,7 +42,14 @@ class SearchForm(forms.Form):
     dateOfIncident = forms.DateField(required=False, widget=SelectDateWidget(years=YEAR_CHOICES), help_text="Date of incident")
 
 class CopyMoveReportForm(forms.Form):
+    #dest = forms.CharField(required=False, max_length=128, help_text="Destination (leave empty for homepage)")
     dest = forms.ModelChoiceField(required=False, queryset=None, help_text="Destination (leave empty for homepage)")
+
+class GroupForm(forms.Form):
+    name = forms.CharField(required=True, max_length=128, help_text="Group Name")
+
+class GroupUserForm(forms.Form):
+    user = forms.CharField(required=True, max_length=128, help_text="User Name")    dest = forms.ModelChoiceField(required=False, queryset=None, help_text="Destination (leave empty for homepage)")
 
 class ShareReportForm(forms.Form):
     dest = forms.ModelChoiceField(queryset=None, help_text="Group")

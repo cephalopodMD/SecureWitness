@@ -11,7 +11,9 @@ urlpatterns = patterns('',
     url(r'^user/(?P<user_name_slug>[\w\-]+)/delete_account/$', views.delete_account, name='delete account'),
 
     url(r'^user/(?P<user_name_slug>[\w\-]+)/$', views.user, name='user'),
+    url(r'^add_group/$', views.add_group, name='add_group'),
     url(r'^group/(?P<group_id>[\w\-]+)/$', views.group, name='group'),
+    url(r'^group/(?P<group_id>[\w\-]+)/add_to_group/$', views.add_to_group, name='add_to_group'),
 
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/folder/(?P<folder_slug>[\w\-]+)/add_report/$', views.add_report, name='add report'),

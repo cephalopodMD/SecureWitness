@@ -4,7 +4,7 @@ from django.core.files import File
 from django.shortcuts import render
 from app.models import Report, Attachment, Folder
 from app.encryption import encrypt_file
-from app.forms import UserForm, ReportForm, AttachmentForm, SearchForm, FolderForm, CopyMoveReportForm, ShareReportForm
+from app.forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -145,8 +145,56 @@ def group(request, group_id):
     # Retrieve all of the user's reports that are not stored in folders
     reports = currGroup.report_set.all()
 
-    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup})
+    is_admin = False
+    if currGroup.id == 1:
+        is_admin = True
 
+    return render(request, 'app/group.html', {'user': currUser,
+                                              'reports': reports,
+                                              'group': currGroup,
+                                              'is_admin': is_admin})
+
+@login_required
+def add_group(request):
+
+    # Validate that the user has access
+    currUser = request.user
+    # Validate admin status
+    if not currUser.groups.filter(id=1).exists():
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            group = Group()
+            group.name = request.POST.get('name', None)
+            group.save()
+            return HttpResponseRedirect('/app/group/'+str(group.id)+'/add_to_group/')
+    else:
+        form = GroupForm
+    return render(request, 'app/add_group.html', {'form': form,
+                                                  'user': currUser})
+
+@login_required
+def add_to_group(request, group_id):
+
+    # Validate that the user has access
+    currUser = request.user
+    # Validate admin status
+    if not currUser.groups.filter(id=1).exists() or currUser.groups.filter(id=group_id).exists():
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = GroupUserForm(request.POST)
+        if form.is_valid():
+            group = Group.objects.filter(id=group_id).first()
+            user = User.objects.filter(username=request.POST.get('user')).first()
+            user.groups.add(group)
+            return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
+    else:
+        form = GroupUserForm
+    return render(request, 'app/add_to_group.html', {'form': form,
+                                                  'user': currUser})
 @login_required
 def add_report(request, user_name_slug, folder_slug=None):
 
@@ -236,7 +284,6 @@ def add_file(request, report_slug=None):
             attachment = form.save(commit=False)
             # Set fields not specified by the form
             attachment.user = currUser
-            attachment.report = report
             attachment.report = report
             attachment.save()
             # Encrypt the file if necessary

@@ -16,22 +16,34 @@
              |
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
         </p>
-        {% if reports %}
-            <p><strong>Reports</strong></p>
-            <ul>
-                {% for report in reports %}
-                <li>
-                    <p>{{report.shortDesc}}</p>
-                    <a href="/app/report/{{ report.id }}/">View Report</a>
-                    {% if report.user == user %}
-                         |
-                        <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove">Remove report</a>
-                    {% endif %}
-                </li>
-                {% endfor %}
-            </ul>
+        {%  if is_admin %}
+            <p>
+                <a href="/app/add_group/">Create a new group</a>
+            </p>
         {% else %}
-            <p><strong>This group doesn't contain any reports.</strong></p>
-        {% endif %}
+            <p>
+                <a href="/app/group/{{ group.id }}/add_report/">File a New Report</a>
+            </p>
+            <p>
+                <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
+            </p>
+            {% if reports %}
+                <p><strong>Reports</strong></p>
+                <ul>
+                    {% for report in reports %}
+                    <li>
+                        <p>{{report.shortDesc}}</p>
+                        <a href="/app/report/{{ report.id }}/">View Report</a>
+                        {% if report.user == user %}
+                             |
+                            <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Remove report</a>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p><strong>This group doesn't contain any reports.</strong></p>
+            {% endif %}
+        {%  endif %}
     </body>
 </html>
