@@ -22,10 +22,9 @@
             </p>
         {% else %}
             <p>
-                <a href="/app/group/{{ group.id }}/add_report/">File a New Report</a>
-            </p>
-            <p>
                 <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
+                 |
+                <a href="/app/group/{{ group.id }}/remove_from_group/">Remove a user from this group</a>
             </p>
             {% if reports %}
                 <p><strong>Reports</strong></p>

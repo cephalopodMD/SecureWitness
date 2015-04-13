@@ -17,7 +17,7 @@ class UserForm(forms.ModelForm):
 class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
-        exclude = ('user', 'timeCreated','folder',)
+        exclude = ('user', 'timeCreated','folder','groups')
     def __init__(self, *args, **kwargs):
         super(ReportForm, self).__init__(*args, **kwargs)
         self.fields['dateOfIncident'].widget = SelectDateWidget(years=YEAR_CHOICES)
@@ -49,7 +49,9 @@ class GroupForm(forms.Form):
     name = forms.CharField(required=True, max_length=128, help_text="Group Name")
 
 class GroupUserForm(forms.Form):
-    user = forms.CharField(required=True, max_length=128, help_text="User Name")    dest = forms.ModelChoiceField(required=False, queryset=None, help_text="Destination (leave empty for homepage)")
+    #user = forms.CharField(required=True, max_length=128, help_text="User Name")
+    user = forms.ModelChoiceField(queryset=None, help_text="User Name")
+
 
 class ShareReportForm(forms.Form):
     dest = forms.ModelChoiceField(queryset=None, help_text="Group")

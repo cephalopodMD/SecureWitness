@@ -22,7 +22,7 @@
                 <br />
             {% endfor %}
 
-            <br/><input type="submit" value="Add to Group" />
+            <br/><input type="submit" {% if add %} value="Add to Group" {% else %} value="Remove from Group" {% endif %}/>
         </form>
     </body>
 

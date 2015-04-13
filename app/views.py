@@ -139,7 +139,7 @@ def group(request, group_id):
     currUser = request.user
     # Get current group
     currGroup = Group.objects.filter(id=group_id).first()
-    if not currUser.groups.filter(id=group_id).exists():
+    if not currUser.groups.filter(id=group_id).exists() and not currUser.groups.filter(id=1).exists():
         return HttpResponse("You are not authorized to view this page")
 
     # Retrieve all of the user's reports that are not stored in folders
@@ -149,10 +149,7 @@ def group(request, group_id):
     if currGroup.id == 1:
         is_admin = True
 
-    return render(request, 'app/group.html', {'user': currUser,
-                                              'reports': reports,
-                                              'group': currGroup,
-                                              'is_admin': is_admin})
+    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'is_admin': is_admin})
 
 @login_required
 def add_group(request):
@@ -169,11 +166,10 @@ def add_group(request):
             group = Group()
             group.name = request.POST.get('name', None)
             group.save()
-            return HttpResponseRedirect('/app/group/'+str(group.id)+'/add_to_group/')
+            return HttpResponseRedirect('/app/group/1/')
     else:
         form = GroupForm
-    return render(request, 'app/add_group.html', {'form': form,
-                                                  'user': currUser})
+    return render(request, 'app/add_group.html', {'form': form, 'user': currUser})
 
 @login_required
 def add_to_group(request, group_id):
@@ -181,20 +177,49 @@ def add_to_group(request, group_id):
     # Validate that the user has access
     currUser = request.user
     # Validate admin status
-    if not currUser.groups.filter(id=1).exists() or currUser.groups.filter(id=group_id).exists():
+    if not (currUser.groups.filter(id=1).exists() or currUser.groups.filter(id=group_id).exists()):
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
-        form = GroupUserForm(request.POST)
-        if form.is_valid():
-            group = Group.objects.filter(id=group_id).first()
-            user = User.objects.filter(username=request.POST.get('user')).first()
-            user.groups.add(group)
-            return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        #if form.is_valid():
+
+        group = Group.objects.filter(id=group_id).first()
+        #user = User.objects.filter(username=request.POST.get('user')).first()
+        user.groups.add(group)
+        return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
     else:
-        form = GroupUserForm
-    return render(request, 'app/add_to_group.html', {'form': form,
-                                                  'user': currUser})
+        form = GroupUserForm()
+        form.fields['user'].queryset = User.objects.all()
+
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True})
+
+@login_required
+def remove_from_group(request, group_id):
+
+    # Validate that the user has access
+    currUser = request.user
+    # Validate admin status
+    if not currUser.groups.filter(id=1).exists():
+        return HttpResponse("You are not authorized to view this page")
+
+    currGroup = Group.objects.filter(id=group_id).first()
+
+    if request.method == 'POST':
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        #if form.is_valid():
+
+        #user = User.objects.filter(username=request.POST.get('user')).first()
+        user.groups.remove(currGroup)
+        return HttpResponseRedirect('/app/group/'+str(currGroup.id)+'/')
+    else:
+        form = GroupUserForm()
+        form.fields['user'].queryset = currGroup.user_set.all()
+
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser})
+
 @login_required
 def add_report(request, user_name_slug, folder_slug=None):
 
