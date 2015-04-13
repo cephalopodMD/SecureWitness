@@ -166,6 +166,8 @@ def add_group(request):
             group = Group()
             group.name = request.POST.get('name', None)
             group.save()
+            currUser.groups.add(group)
+            currUser.save()
             return HttpResponseRedirect('/app/group/1/')
     else:
         form = GroupForm
@@ -177,7 +179,7 @@ def add_to_group(request, group_id):
     # Validate that the user has access
     currUser = request.user
     # Validate admin status
-    if not (currUser.groups.filter(id=1).exists() or currUser.groups.filter(id=group_id).exists()):
+    if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
@@ -201,7 +203,7 @@ def remove_from_group(request, group_id):
     # Validate that the user has access
     currUser = request.user
     # Validate admin status
-    if not currUser.groups.filter(id=1).exists():
+    if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
 
     currGroup = Group.objects.filter(id=group_id).first()

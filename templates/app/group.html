@@ -19,6 +19,8 @@
         {%  if is_admin %}
             <p>
                 <a href="/app/add_group/">Create a new group</a>
+                 |
+                <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
             </p>
         {% else %}
             <p>

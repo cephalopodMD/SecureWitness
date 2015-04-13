@@ -15,6 +15,14 @@
             <a href="/app/logout/">Logout</a>
              |
             <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
+            {% if user.groups.all %}
+                |
+                Groups
+                {% for group in user.groups.all %}
+                    |
+                    <a href="/app/group/{{group.id}}/">{{ group.name }}</a>
+                {% endfor %}
+            {% endif %}
         </p>
         <p>
             <a href="/app/user/{{ user.username }}/add_report/">File a New Report</a>
