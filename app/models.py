@@ -10,7 +10,7 @@ def get_upload_path(instance, filename):
 class UserGroupRequest(models.Model):
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group, help_text="Group")
-    text = models.TextField(help_text="Reason")
+    text = models.TextField(blank=True, help_text="Reason")
 
 class Folder(models.Model):
     user = models.ForeignKey(User)

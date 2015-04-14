@@ -22,7 +22,6 @@ urlpatterns = patterns('',
     url(r'^group/(?P<group_id>[\w\-]+)/remove_from_group/$', views.remove_from_group, name='remove from group'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/share/$', views.share_report, name='share report'),
     url(r'^group/(?P<group_id>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/remove/$', views.remove_report, name='remove report'),
-    url(r'^request-group-access/$', views.group_request, name='request group access'),
     # Reports
     url(r'^report/(?P<report_slug>[\w\-]+)/$', views.report, name='view report'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='report'),
@@ -34,4 +33,9 @@ urlpatterns = patterns('',
     url(r'^report/(?P<report_slug>[\w\-]+)/files/(?P<file_slug>[\w\-]+)/delete/$', views.delete_file, name='delete file'),
     # Search
     url(r'^search/$', views.search, name='search'),
+    # Group Access
+    url(r'^request-group-access/$', views.group_request, name='request group access'),
+    url(r'^view-group-requests/$', views.view_group_requests, name='view group requests'),
+    url(r'^request/(?P<request_id>[\w\-]+)/confirm/$', views.confirm_request, name='confirm request'),
+    url(r'^request/(?P<request_id>[\w\-]+)/delete/$', views.delete_request, name='delete request'),
 )

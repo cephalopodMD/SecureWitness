@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>SecureWitness</title>
+        <!-- Bootstrap core CSS -->
+        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css" rel="stylesheet">
+        <!-- Bootstrap theme
+        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
+        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
+        -->
+    </head>
+
+    <body>
+        <h1>Group Requests</h1>
+        <p>
+        <a href="/app/">SecureWitness Home</a>
+         |
+        <a href="/app/user/{{user.username}}/">View Your Homepage</a>
+         |
+        <a href="/app/logout/">Logout</a>
+         |
+        <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
+        </p>
+
+        {% if requests %}
+
+            <ul>
+                {% for request in requests %}
+                <li>
+                    <p>User: {{request.user}}</p>
+                    <p>Group: {{request.group}}</p>
+                    <p>Reason: {{request.text}}</p>
+                </li>
+                {% endfor %}
+            </ul>
+
+        {% else %}
+                <p><strong>There are no group requests at this time</strong></p>
+        {% endif %}
+
+    </body>
+</html>

@@ -31,12 +31,27 @@
             {% endfor %}
             </p>
         {% endif %}
-        {%  if is_admin %}
+        {%  if admin %}
             <p>
                 <a href="/app/add_group/">Create a new group</a>
                  |
                 <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
             </p>
+            <p><strong>Group Requests</strong></p>
+            {% if requests %}
+                <ul>
+                    {% for request in requests %}
+                        <li>
+                            <p>User: {{ request.user }}</p>
+                            <p>Group: {{ request.group }}</p>
+                            <p>Reason: {{ request.text }}</p>
+                            <p><a href="/app/request/{{request.id}}/confirm">Confirm</a> | <a href="/app/request/{{request.id}}/delete">Delete Request</a></p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>There are no group requests at this time</p>
+            {% endif %}
         {% else %}
             <p>
                 <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>

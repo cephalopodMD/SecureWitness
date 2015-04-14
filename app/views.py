@@ -8,6 +8,7 @@ from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
+from django.db.models import Q
 
 def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
     if user_name_slug and currUser.username != user_name_slug:
@@ -214,8 +215,9 @@ def group(request, group_id):
     # Retrieve reports shared with the group
     currGroup = Group.objects.filter(id=group_id).first()
     reports = currGroup.report_set.all()
+    requests = UserGroupRequest.objects.all()
 
-    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'is_admin': currGroup.id == 1})
+    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'admin': currGroup.id == 1, 'requests': requests})
 
 @login_required
 def add_group(request):
@@ -255,11 +257,16 @@ def add_to_group(request, group_id):
         userID = request.POST.get('user', None)
         user = User.objects.filter(id=userID).first()
         user.groups.add(group)
+        # Delete a pending request if necessary
+        pendingRequests = UserGroupRequest.objects.filter(user=user,group=group)
+        if pendingRequests:
+            for pendingRequest in pendingRequests:
+                pendingRequest.delete()
         return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
     else:
         form = GroupUserForm()
-        # Option to add any member in the system
-        form.fields['user'].queryset = User.objects.all()
+        # Option to add any member not in the group
+        form.fields['user'].queryset = User.objects.exclude(id__in=group.user_set.all().values_list('id', flat=True))
 
     return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True, 'group': group})
 
@@ -682,6 +689,49 @@ def group_request(request):
             print(form.errors)
     else:
         form = UserGroupRequestForm()
+        # Request access only to groups which one is not a member
+        form.fields['group'].queryset = Group.objects.exclude(id__in=request.user.groups.all().values_list('id', flat=True))
 
     return render(request, 'app/request.html', {'form': form})
 
+@login_required
+def view_group_requests(request):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+    # Get info about all group requests
+    group_requests = UserGroupRequest.objects.all()
+
+    return render(request, 'app/view_requests.html', {'user': currUser, 'requests': group_requests})
+
+@login_required
+def confirm_request(request, request_id):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
+
+    requestUser = groupRequest.user
+    requestGroup = groupRequest.group
+
+    requestUser.groups.add(requestGroup)
+    requestUser.save()
+
+    groupRequest.delete()
+
+    return HttpResponseRedirect('/app/group/1/')
+
+@login_required
+def delete_request(request, request_id):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
+    groupRequest.delete()
+
+    return HttpResponseRedirect('/app/group/1/')
