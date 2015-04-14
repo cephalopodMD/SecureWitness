@@ -9,10 +9,19 @@ for i in range(2015,1914, -1):
 
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
-
     class Meta:
         model = User
         fields = ('username', 'email', 'password')
+
+class FolderForm(forms.ModelForm):
+    class Meta:
+        model = Folder
+        exclude = ('user', 'slug',)
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ('name',)
 
 class ReportForm(forms.ModelForm):
     class Meta:
@@ -28,11 +37,18 @@ class AttachmentForm(forms.ModelForm):
     class Meta:
         model = Attachment
         exclude = ('user', 'report', 'encrypted')
+    def clean(self):
+        key = self.cleaned_data.get('key')
+        verify_key = self.cleaned_data.get('verify_key')
+        if key != verify_key:
+            self._errors["key"] = self.error_class(['Passwords do not match.'])
+            del self.cleaned_data['verify_key']
+        return self.cleaned_data
 
-class FolderForm(forms.ModelForm):
+class UserGroupRequestForm(forms.ModelForm):
     class Meta:
-        model = Folder
-        exclude = ('user', 'slug',)
+        model = UserGroupRequest
+        exclude = ('user',)
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")
@@ -44,16 +60,8 @@ class SearchForm(forms.Form):
 class CopyMoveReportForm(forms.Form):
     dest = forms.ModelChoiceField(required=False, queryset=None, help_text="Destination (leave empty for homepage)")
 
-class GroupForm(forms.Form):
-    name = forms.CharField(required=True, max_length=128, help_text="Group Name")
-
 class GroupUserForm(forms.Form):
     user = forms.ModelChoiceField(queryset=None, help_text="User Name")
 
 class ShareReportForm(forms.Form):
     dest = forms.ModelChoiceField(queryset=None, help_text="Group")
-
-class UserGroupRequestForm(forms.ModelForm):
-    class Meta:
-        model = UserGroupRequest
-        exclude = ('user',)
