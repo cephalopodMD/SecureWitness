@@ -7,6 +7,11 @@ import os
 def get_upload_path(instance, filename):
     return os.path.join(MEDIA_ROOT, instance.user.username, filename)
 
+class UserGroupRequest(models.Model):
+    user = models.ForeignKey(User)
+    group = models.ForeignKey(Group, help_text="Group")
+    text = models.TextField(help_text="Reason")
+
 class Folder(models.Model):
     user = models.ForeignKey(User)
     name = models.CharField(max_length=128, help_text="Folder Name")
@@ -18,12 +23,6 @@ class Folder(models.Model):
 
     def __str__(self):
         return str(self.name)
-
-    # This will enforce the fact that a user cannot create two folders with the same name
-    """
-    class Meta:
-        unique_together = ('user', 'name',)
-    """
 
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')

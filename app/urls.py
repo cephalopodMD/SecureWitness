@@ -22,6 +22,7 @@ urlpatterns = patterns('',
     url(r'^group/(?P<group_id>[\w\-]+)/remove_from_group/$', views.remove_from_group, name='remove from group'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/share/$', views.share_report, name='share report'),
     url(r'^group/(?P<group_id>[\w\-]+)/report/(?P<report_slug>[\w\-]+)/remove/$', views.remove_report, name='remove report'),
+    url(r'^request-group-access/$', views.group_request, name='request group access'),
     # Reports
     url(r'^report/(?P<report_slug>[\w\-]+)/$', views.report, name='view report'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_report/$', views.add_report, name='report'),

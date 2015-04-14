@@ -23,13 +23,15 @@
         <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
         </p>
 
+        <p><strong>Groups</strong> | <a href="/app/request-group-access/">Request Access to a Group</a></p>
         {% if user.groups.all %}
-            <p><strong>Groups</strong></p>
             <p>
             {% for group in user.groups.all %}
                 <a href="/app/group/{{group.id}}/">{{group.name}}</a>
             {% endfor %}
             </p>
+        {% else %}
+            <p>You don't belong to any groups</p>
         {% endif %}
             <p>Search for Reports</p>
             <form id="search_form" method="post" action="/app/search/">

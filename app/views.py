@@ -666,3 +666,22 @@ def search(request):
         form = SearchForm()
 
     return render(request, 'app/search.html', {'form': form})
+
+@login_required
+def group_request(request):
+
+    if request.method == 'POST':
+        form = UserGroupRequestForm(request.POST)
+        if form.is_valid():
+            groupRequest = form.save(commit=False)
+            # Set fields not specified by the form
+            groupRequest.user = request.user
+            groupRequest.save()
+            return HttpResponseRedirect('/app/')
+        else:
+            print(form.errors)
+    else:
+        form = UserGroupRequestForm()
+
+    return render(request, 'app/request.html', {'form': form})
+
