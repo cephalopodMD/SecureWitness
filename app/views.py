@@ -515,7 +515,7 @@ def move_report(request, user_name_slug, report_slug):
             # User entered a folder name
             if report.folder and report.folder.name == dest:
                 # Destination = current location
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+report.folder.slug+'/')
             else:
                 folder = Folder.objects.filter(user=currUser,id=dest).first()
                 oldFolder = report.folder
@@ -530,6 +530,10 @@ def move_report(request, user_name_slug, report_slug):
                     newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
                     os.rename(oldLocation,newLocation)
                     f.file.name = os.path.join(settings.MEDIA_ROOT, user_name_slug, folder.name, str(f))
+                if oldFolder:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+oldFolder.slug)
+                else:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             # User entered the home folder
             if not report.folder:
@@ -545,8 +549,7 @@ def move_report(request, user_name_slug, report_slug):
                     newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
                     os.rename(oldLocation,newLocation)
                     f.file.name = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
-
-        return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder.slug+'/')
 
     else:
         form = CopyMoveReportForm()
@@ -574,6 +577,10 @@ def copy_report(request, user_name_slug, report_slug):
                 # Destination = current location
                 return HttpResponse("This report already exists in the given location")
             else:
+                wasInFolder = False
+                if report.folder:
+                    wasInFolder = True
+                    folderSlug = report.folder.slug
                 folder = Folder.objects.filter(user=currUser,id=dest).first()
                 old_files = Attachment.objects.filter(report=report)
                 newReport = report
@@ -588,13 +595,17 @@ def copy_report(request, user_name_slug, report_slug):
                     new_file.encrypted = old_file.encrypted
                     new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, os.path.split(old_file.file.name)[1]))
                     new_file.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder.slug+'/')
+                if wasInFolder:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folderSlug+'/')
+                else:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             # User entered the home folder
             if not report.folder:
                 # Destination = current location
                 return HttpResponse("This report already exists in the given location")
             else:
+                folderSlug = report.folder.slug
                 old_files = Attachment.objects.filter(report=report)
                 newReport = report
                 newReport.pk = None
@@ -608,7 +619,7 @@ def copy_report(request, user_name_slug, report_slug):
                     new_file.encrypted = old_file.encrypted
                     new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, os.path.split(old_file.file.name)[1]))
                     new_file.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folderSlug)
     else:
         form = CopyMoveReportForm()
         form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
