@@ -24,11 +24,16 @@ def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None,
             return False
     return True
 
+def is_admin(user):
+    return user.groups.filter(id=1).exists()
+
 def home(request):
     # Create a list of all public reports
     reports = Report.objects.filter(private=False)
+    currUser = request.user
+    groups = currUser.groups.all()
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/home.html', {'reports': reports})
+    return render(request, 'app/home.html', {'reports': reports, 'user': currUser, 'groups': groups})
 
 def register(request):
     if request.method == 'POST':
@@ -178,6 +183,7 @@ def add_to_group(request, group_id):
 
     # Validate that the user has access
     currUser = request.user
+    group = Group.objects.filter(id=group_id).first()
     # Validate admin status
     if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
@@ -187,7 +193,6 @@ def add_to_group(request, group_id):
         user = User.objects.filter(id=userID).first()
         #if form.is_valid():
 
-        group = Group.objects.filter(id=group_id).first()
         #user = User.objects.filter(username=request.POST.get('user')).first()
         user.groups.add(group)
         return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
@@ -195,7 +200,7 @@ def add_to_group(request, group_id):
         form = GroupUserForm()
         form.fields['user'].queryset = User.objects.all()
 
-    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True})
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True, 'group': group})
 
 @login_required
 def remove_from_group(request, group_id):
@@ -220,7 +225,7 @@ def remove_from_group(request, group_id):
         form = GroupUserForm()
         form.fields['user'].queryset = currGroup.user_set.all()
 
-    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser})
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'group': currGroup})
 
 @login_required
 def add_report(request, user_name_slug, folder_slug=None):
