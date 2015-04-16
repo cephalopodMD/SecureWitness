@@ -676,6 +676,7 @@ def search(request):
             reports = reports.filter(entry_query)
             return render(request, 'app/home.html', {'reports': reports})
         else:
+            print(request.POST)
             # POST request from advanced search
             short = request.POST.get('shortDesc', None)
             if short:
@@ -698,9 +699,15 @@ def search(request):
                 reports = reports.filter(entry_query)
 
             # This doesn't work correctly - evaluates to None
-            dateOfIncident = request.POST.get('dateOfIncident', None)
-            if dateOfIncident:
-                reports = reports.filter(dateOfIndicent=dateOfIncident)
+            dateOfIncident_day = int(request.POST.get('dateOfIncident_day', None))
+            dateOfIncident_month = int(request.POST.get('dateOfIncident_month', None))
+            dateOfIncident_year = int(request.POST.get('dateOfIncident_year', None))
+            if dateOfIncident_day != 0:
+                reports = reports.filter(dateOfIncident__day=dateOfIncident_day)
+            if dateOfIncident_month != 0:
+                reports = reports.filter(dateOfIncident__month=dateOfIncident_month)
+            if dateOfIncident_year != 0:
+                reports = reports.filter(dateOfIncident__year=dateOfIncident_year)
 
             return render(request, 'app/home.html', {'reports': reports})
     else:
