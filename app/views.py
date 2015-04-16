@@ -219,6 +219,10 @@ def group(request, group_id):
 
     return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'admin': currGroup.id == 1, 'requests': requests})
 
+"""
+  Should we add all admins to a group
+"""
+
 @login_required
 def add_group(request):
 
@@ -234,9 +238,11 @@ def add_group(request):
             group = Group()
             group.name = request.POST.get('name', None)
             group.save()
-            # Automatically make the user a member of the group
-            currUser.groups.add(group)
-            currUser.save()
+            # Automatically make the admins members of the group
+            admins = Group.objects.filter(id=1).first().user_set.all()
+            for admin in admins:
+                admin.groups.add(group)
+                admin.save()
             return HttpResponseRedirect('/app/group/1/')
     else:
         form = GroupForm
