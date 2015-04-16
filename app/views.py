@@ -679,26 +679,25 @@ def search(request):
             # POST request from advanced search
             short = request.POST.get('shortDesc', None)
             if short:
-                shortWords = short.split()
-                for word in shortWords:
-                    reports = reports.filter(shortDesc__icontains=word)
+                entry_query = get_query(short, ['shortDesc',])
+                reports = reports.filter(entry_query)
+
             long = request.POST.get('detailedDesc', None)
             if long:
-                longWords = long.split()
-                for word in longWords:
-                    reports = reports.filter(detailedDesc__icontains=word)
+                entry_query = get_query(long, ['detailedDesc',])
+                reports = reports.filter(entry_query)
 
             keywords = request.POST.get('keywords', None)
             if keywords:
-                keywordWords = keywords.split()
-                for word in keywordWords:
-                    reports = reports.filter(keywords__icontains=word)
+                entry_query = get_query(keywords, ['keywords',])
+                reports = reports.filter(entry_query)
 
             location = request.POST.get('location', None)
             if location:
-                reports = reports.filter(location__icontains=location)
+                entry_query = get_query(location, ['location',])
+                reports = reports.filter(entry_query)
 
-            # This doesn't work correctly
+            # This doesn't work correctly - evaluates to None
             dateOfIncident = request.POST.get('dateOfIncident', None)
             if dateOfIncident:
                 reports = reports.filter(dateOfIndicent=dateOfIncident)
