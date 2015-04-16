@@ -1,4 +1,4 @@
-import os
+import os, re
 from django.core.files import File
 from django.shortcuts import render
 from app.encryption import encrypt_file
@@ -9,6 +9,32 @@ from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
 from django.db.models import Q
+
+def normalize_query(query_string, findterms=re.compile(r'"([^"]+)"|(\S+)').findall, normspace=re.compile(r'\s{2,}').sub):
+    ''' Splits the query string in invidual keywords, getting rid of unecessary spaces
+        and grouping quoted words together.
+    '''
+    return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)]
+
+def get_query(query_string, search_fields):
+    ''' Returns a query, that is a combination of Q objects. That combination
+        aims to search keywords within a model by testing the given search fields.
+    '''
+    query = None # Query to search for every search term
+    terms = normalize_query(query_string)
+    for term in terms:
+        or_query = None # Query to search for a given term in each field
+        for field_name in search_fields:
+            q = Q(**{"%s__icontains" % field_name: term})
+            if or_query is None:
+                or_query = q
+            else:
+                or_query = or_query | q
+        if query is None:
+            query = or_query
+        else:
+            query = query & or_query
+    return query
 
 def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
     if user_name_slug and currUser.username != user_name_slug:
@@ -646,6 +672,8 @@ def search(request):
         basic_text = request.POST.get('search')
         if basic_text:
             # POST request from basic search
+            entry_query = get_query(basic_text, ['shortDesc', 'detailedDesc', 'keywords',])
+            reports = reports.filter(entry_query)
             return render(request, 'app/home.html', {'reports': reports})
         else:
             # POST request from advanced search
@@ -670,6 +698,7 @@ def search(request):
             if location:
                 reports = reports.filter(location__icontains=location)
 
+            # This doesn't work correctly
             dateOfIncident = request.POST.get('dateOfIncident', None)
             if dateOfIncident:
                 reports = reports.filter(dateOfIndicent=dateOfIncident)
