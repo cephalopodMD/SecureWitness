@@ -157,6 +157,28 @@ def delete_account(request, user_name_slug):
     return user_logout(request)
 
 @login_required
+def suspend_user(request):
+
+    currUser = request.user
+    adminGroup = Group.objects.filter(id=1).first()
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        user.is_active = False
+        user.save()
+        return HttpResponseRedirect('/app/group/1/')
+    else:
+        form = GroupUserForm()
+        # Option to remove only members belonging to the group
+        form.fields['user'].queryset = User.objects.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True))
+
+    return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser})
+
+
+@login_required
 def user(request, user_name_slug):
 
     # Validate that the user has access

@@ -39,4 +39,5 @@ urlpatterns = patterns('',
     url(r'^view-group-requests/$', views.view_group_requests, name='view group requests'),
     url(r'^request/(?P<request_id>[\w\-]+)/confirm/$', views.confirm_request, name='confirm request'),
     url(r'^request/(?P<request_id>[\w\-]+)/delete/$', views.delete_request, name='delete request'),
+    url(r'^suspend-user/$', views.suspend_user, name='suspend user'),
 )

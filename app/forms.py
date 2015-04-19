@@ -65,3 +65,6 @@ class GroupUserForm(forms.Form):
 
 class ShareReportForm(forms.Form):
     dest = forms.ModelChoiceField(queryset=None, help_text="Group")
+
+class RemoveUserForm(forms.Form):
+    user = forms.ModelChoiceField(queryset=None, help_text="User Name")
