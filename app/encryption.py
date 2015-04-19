@@ -1,6 +1,7 @@
 import os, struct
 from Crypto import Random
 from Crypto.Cipher import AES
+from Crypto.Hash import MD5
 
 def encrypt_file(key, in_filename, chunksize=1024):
     """ Encrypts a file using AES (CBC mode) with the
@@ -83,3 +84,14 @@ def decrypt_file(key, in_filename, chunksize=1024):
                 outfile.write(decryptor.decrypt(chunk))
 
             outfile.truncate(origsize)
+
+def hash(in_filename):
+    h = MD5.new()
+    chunk_size = 8192
+    with open(in_filename, 'rb') as f:
+        while True:
+            chunk = f.read(chunk_size)
+            if len(chunk) == 0:
+                break
+            h.update(chunk)
+    return h.hexdigest()
