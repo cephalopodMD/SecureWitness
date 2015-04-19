@@ -8,26 +8,35 @@
         <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
         <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
         -->
-        -->
     </head>
 
     <body>
         {% if user.is_authenticated %}
-            <h1>SecureWitness: Home</h1>
-            <p>
-            <a href="/app/">SecureWitness Home</a>
-             |
-            <a href="/app/user/{{user.username}}/">View Your Homepage</a>
-             |
-            <a href="/app/logout/">Logout</a>
-             |
-            <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
-            </p>
+        <h1>SecureWitness: Home</h1>
+        <p>
+        <a href="/app/">SecureWitness Home</a>
+         |
+        <a href="/app/user/{{user.username}}/">View Your Homepage</a>
+         |
+        <a href="/app/logout/">Logout</a>
+         |
+        <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
+        </p>
 
+        <p><strong>Groups</strong> | <a href="/app/request-group-access/">Request Access to a Group</a></p>
+        {% if user.groups.all %}
+            <p>
+            {% for group in user.groups.all %}
+                <a href="/app/group/{{group.id}}/">{{group.name}}</a>
+            {% endfor %}
+            </p>
+        {% else %}
+            <p>You don't belong to any groups</p>
+        {% endif %}
             <p>Search for Reports</p>
-            <form id="login_form" method="post" action="/app/login/">
+            <form id="search_form" method="post" action="/app/search/">
                 {% csrf_token %}
-                <input type="text" name="search" value="" size="50" /> <input type="submit" value="search" />
+                <input type="text" name="search" value="" size="50"/> <input type="submit" value="Search" />
             </form>
             <p><a href="/app/search/">Advanced Search</a></p>
 
@@ -37,7 +46,12 @@
                 {% for report in reports %}
                 <li>
                     <p>{{report.shortDesc}}</p>
+                    <p>
                     <a href="/app/report/{{ report.id }}/">View Report</a>
+                    {% if admin %}
+                         | <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
+                    {% endif %}
+                    </p>
                 </li>
                 {% endfor %}
             </ul>
@@ -45,9 +59,9 @@
                 <p><strong>There are no matching reports currently in the database</strong></p>
             {% endif %}
         {% else %}
-            <h1>Welcome to SecureWitness</h1>
-            <a href="/app/login/">Login to SecureWitness</a><br />
-            <a href="/app/register/">Register</a><br />
+        <h1>Welcome to SecureWitness</h1>
+        <a href="/app/login/">Login to SecureWitness</a><br />
+        <a href="/app/register/">Register</a><br />
         {% endif %}
     </body>
 </html>

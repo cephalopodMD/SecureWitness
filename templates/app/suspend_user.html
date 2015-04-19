@@ -5,13 +5,8 @@
     </head>
 
     <body>
-        {% if add %}
-        <h1>Add user to group</h1>
-        {% else %}
-        <h1>Remove user from group</h1>
-        {% endif %}
+        <h1>Suspend User</h1>
 
-        <!-- This line determines whether to call the add_report or edit_report view -->
         <form id="group_form" method="post" action=""/>
 
             {% csrf_token %}
@@ -26,7 +21,7 @@
                 <br />
             {% endfor %}
 
-            <br/><input type="submit" {% if add %} value="Add" {% else %} value="Remove" {% endif %}/> <button type="button" onclick="window.location = '/app/group/{{group.id}}/'">Cancel</button>
+            <br/><input type="submit" value="Suspend"/> <button type="button" onclick="window.location = '/app/group/1/'">Cancel</button>
         </form>
     </body>
 

@@ -14,20 +14,46 @@
         <!-- Displays the user's username as a header -->
         <h1>Group: {{ group.name }}</h1>
         <p>
-            <a href="/app/">SecureWitness Home</a>
-             |
-            <a href="/app/user/{{user.username}}/">View Your Homepage</a>
-             |
-            <a href="/app/logout/">Logout</a>
-             |
-            <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a>
+        <a href="/app/">SecureWitness Home</a>
+         |
+        <a href="/app/user/{{user.username}}/">View Your Homepage</a>
+         |
+        <a href="/app/logout/">Logout</a>
+         |
+        <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
         </p>
-        {%  if is_admin %}
+
+        {% if user.groups.all %}
+            <p><strong>Groups</strong></p>
             <p>
+            {% for group in user.groups.all %}
+                <a href="/app/group/{{group.id}}/">{{group.name}}</a>
+            {% endfor %}
+            </p>
+        {% endif %}
+        {%  if admin %}
+            <p>
+                <a href="/app/suspend-user/">Suspend a User</a>
+                 |
                 <a href="/app/add_group/">Create a new group</a>
                  |
                 <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
             </p>
+            <p><strong>Group Requests</strong></p>
+            {% if requests %}
+                <ul>
+                    {% for request in requests %}
+                        <li>
+                            <p>User: {{ request.user }}</p>
+                            <p>Group: {{ request.group }}</p>
+                            <p>Reason: {{ request.text }}</p>
+                            <p><a href="/app/request/{{request.id}}/confirm">Confirm</a> | <a href="/app/request/{{request.id}}/delete">Delete Request</a></p>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% else %}
+                <p>There are no group requests at this time</p>
+            {% endif %}
         {% else %}
             <p>
                 <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
@@ -43,7 +69,7 @@
                         <a href="/app/report/{{ report.id }}/">View Report</a>
                         {% if report.user == user %}
                              |
-                            <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Remove report</a>
+                            <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove/">Remove from Group</a>
                         {% endif %}
                     </li>
                     {% endfor %}

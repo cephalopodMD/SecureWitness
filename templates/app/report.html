@@ -21,6 +21,7 @@
         <p><strong>Attachments:</strong></p>
         {% for file in files %}
             {{ file }}<br/>
+            <p>Hash: {{ file.hash }}</p>
             {% if report.folder %}
                 <a href="/media/{{report.user.username}}/{{report.folder.name}}/{{file}}">Download</a>
             {% else %}
