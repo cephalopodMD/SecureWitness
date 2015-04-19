@@ -1,7 +1,7 @@
 import os, re
 from django.core.files import File
 from django.shortcuts import render
-from app.encryption import encrypt_file
+from app.encryption import encrypt_file, hash
 from app.forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
@@ -614,6 +614,8 @@ def add_file(request, report_slug=None):
             attachment.user = currUser
             attachment.report = report
             attachment.save()
+            attachment.hash = hash(attachment.file.name)
+            attachment.save()
             # Encrypt the file if necessary
             key = request.POST.get('key', None)
             if key:
@@ -626,6 +628,8 @@ def add_file(request, report_slug=None):
                 # Remove the original file from memory
                 os.remove(fileName)
                 # Save updates to the database
+                attachment.save()
+                attachment.hash = hash(attachment.file.name)
                 attachment.save()
             # Update the file's location in memory if necessary
             if report.folder:

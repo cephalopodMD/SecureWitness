@@ -48,7 +48,7 @@ class Attachment(models.Model):
     report = models.ForeignKey(Report)
     file = models.FileField(upload_to=get_upload_path)
     encrypted = models.BooleanField(default=False)
-    hash = models.CharField(max_length=128)
+    hash = models.CharField(max_length=128, blank=True)
 
     def __str__(self):
         return os.path.split(self.file.name)[1]
