@@ -280,9 +280,9 @@ def add_group(request):
 @login_required
 def add_to_group(request, group_id):
 
-    # Validate that the user has access - an admin can add a new member
+    # Validate that the user has access - any member can add a new member
     currUser = request.user
-    if not currUser.groups.filter(id=1).exists():
+    if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
 
     # Get information about the current group
@@ -315,6 +315,7 @@ def remove_from_group(request, group_id):
 
     # Get information about the current group
     group = Group.objects.filter(id=group_id).first()
+    adminGroup = Group.objects.filter(id=1).first()
 
     if request.method == 'POST':
         userID = request.POST.get('user', None)
@@ -324,7 +325,7 @@ def remove_from_group(request, group_id):
     else:
         form = GroupUserForm()
         # Option to remove only members belonging to the group
-        form.fields['user'].queryset = group.user_set.all()
+        form.fields['user'].queryset = group.user_set.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True))
 
     return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': False, 'group': group})
 
