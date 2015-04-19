@@ -2,7 +2,6 @@ Django==1.7.5
 dj-database-url==0.3.0
 dj-static==0.0.6
 django-toolbelt==0.0.1
-friends==0.1
 gunicorn==19.3.0
 html5lib==0.999
 httplib2==0.9
