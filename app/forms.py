@@ -36,7 +36,7 @@ class AttachmentForm(forms.ModelForm):
     verify_key = forms.CharField(required=False, max_length=32, widget=forms.PasswordInput, help_text="Verify the key")
     class Meta:
         model = Attachment
-        exclude = ('user', 'report', 'encrypted')
+        exclude = ('user', 'report', 'encrypted', 'hash')
     def clean(self):
         key = self.cleaned_data.get('key')
         verify_key = self.cleaned_data.get('verify_key')
