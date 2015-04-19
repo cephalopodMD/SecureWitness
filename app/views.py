@@ -1,15 +1,40 @@
-import os, shutil
-from django.contrib.auth.models import Group
+import os, re
 from django.core.files import File
 from django.shortcuts import render
-from app.models import Report, Attachment, Folder
-from app.encryption import encrypt_file
+from app.encryption import encrypt_file, hash
 from app.forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 from SecureWitness import settings
+from django.db.models import Q
+
+def normalize_query(query_string, findterms=re.compile(r'"([^"]+)"|(\S+)').findall, normspace=re.compile(r'\s{2,}').sub):
+    ''' Splits the query string in invidual keywords, getting rid of unecessary spaces
+        and grouping quoted words together.
+    '''
+    return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)]
+
+def get_query(query_string, search_fields):
+    ''' Returns a query, that is a combination of Q objects. That combination
+        aims to search keywords within a model by testing the given search fields.
+    '''
+    query = None # Query to search for every search term
+    terms = normalize_query(query_string)
+    for term in terms:
+        or_query = None # Query to search for a given term in each field
+        for field_name in search_fields:
+            q = Q(**{"%s__icontains" % field_name: term})
+            if or_query is None:
+                or_query = q
+            else:
+                or_query = or_query | q
+        if query is None:
+            query = or_query
+        else:
+            query = query & or_query
+    return query
 
 def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
     if user_name_slug and currUser.username != user_name_slug:
@@ -24,11 +49,19 @@ def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None,
             return False
     return True
 
+def is_admin(user):
+    return user.groups.filter(id=1).exists()
+
 def home(request):
-    # Create a list of all public reports
-    reports = Report.objects.filter(private=False)
+    currUser = request.user
+    # Create a list of all reports
+    if is_admin(currUser):
+        reports = Report.objects.all()
+    else:
+        reports = Report.objects.filter(private=False)
+    groups = currUser.groups.all()
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/home.html', {'reports': reports})
+    return render(request, 'app/home.html', {'reports': reports, 'user': currUser, 'groups': groups, 'admin': is_admin(currUser)})
 
 def register(request):
     if request.method == 'POST':
@@ -102,6 +135,12 @@ def user_logout(request):
     # Take the user back to the homepage
     return HttpResponseRedirect('/app/')
 
+"""
+  What should happen to a user's reports when they
+  delete their account? Should we remove them all
+  from the database or will this cause model key
+  issues?
+"""
 @login_required
 def delete_account(request, user_name_slug):
 
@@ -112,17 +151,39 @@ def delete_account(request, user_name_slug):
 
     # Set the user's account to inactive
     currUser.is_active = False
-    currUser.save();
+    currUser.save()
 
     # Log the user out of their account
     return user_logout(request)
+
+@login_required
+def suspend_user(request):
+
+    currUser = request.user
+    adminGroup = Group.objects.filter(id=1).first()
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        user.is_active = False
+        user.save()
+        return HttpResponseRedirect('/app/group/1/')
+    else:
+        form = GroupUserForm()
+        # Option to remove only members belonging to the group
+        form.fields['user'].queryset = User.objects.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True))
+
+    return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser})
+
 
 @login_required
 def user(request, user_name_slug):
 
     # Validate that the user has access
     currUser = request.user
-    if not hasAccess(currUser,user_name_slug):
+    if currUser.username != user_name_slug:
         return HttpResponse("You are not authorized to view this page")
 
     # Retrieve all of the user's reports that are not stored in folders
@@ -131,305 +192,6 @@ def user(request, user_name_slug):
     folders = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
-
-@login_required
-def group(request, group_id):
-
-    # Validate that the user has access
-    currUser = request.user
-    # Get current group
-    currGroup = Group.objects.filter(id=group_id).first()
-    if not currUser.groups.filter(id=group_id).exists() and not currUser.groups.filter(id=1).exists():
-        return HttpResponse("You are not authorized to view this page")
-
-    # Retrieve all of the user's reports that are not stored in folders
-    reports = currGroup.report_set.all()
-
-    is_admin = False
-    if currGroup.id == 1:
-        is_admin = True
-
-    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'is_admin': is_admin})
-
-@login_required
-def add_group(request):
-
-    # Validate that the user has access
-    currUser = request.user
-    # Validate admin status
-    if not currUser.groups.filter(id=1).exists():
-        return HttpResponse("You are not authorized to view this page")
-
-    if request.method == 'POST':
-        form = GroupForm(request.POST)
-        if form.is_valid():
-            group = Group()
-            group.name = request.POST.get('name', None)
-            group.save()
-            currUser.groups.add(group)
-            currUser.save()
-            return HttpResponseRedirect('/app/group/1/')
-    else:
-        form = GroupForm
-    return render(request, 'app/add_group.html', {'form': form, 'user': currUser})
-
-@login_required
-def add_to_group(request, group_id):
-
-    # Validate that the user has access
-    currUser = request.user
-    # Validate admin status
-    if not currUser.groups.filter(id=group_id).exists():
-        return HttpResponse("You are not authorized to view this page")
-
-    if request.method == 'POST':
-        userID = request.POST.get('user', None)
-        user = User.objects.filter(id=userID).first()
-        #if form.is_valid():
-
-        group = Group.objects.filter(id=group_id).first()
-        #user = User.objects.filter(username=request.POST.get('user')).first()
-        user.groups.add(group)
-        return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
-    else:
-        form = GroupUserForm()
-        form.fields['user'].queryset = User.objects.all()
-
-    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True})
-
-@login_required
-def remove_from_group(request, group_id):
-
-    # Validate that the user has access
-    currUser = request.user
-    # Validate admin status
-    if not currUser.groups.filter(id=group_id).exists():
-        return HttpResponse("You are not authorized to view this page")
-
-    currGroup = Group.objects.filter(id=group_id).first()
-
-    if request.method == 'POST':
-        userID = request.POST.get('user', None)
-        user = User.objects.filter(id=userID).first()
-        #if form.is_valid():
-
-        #user = User.objects.filter(username=request.POST.get('user')).first()
-        user.groups.remove(currGroup)
-        return HttpResponseRedirect('/app/group/'+str(currGroup.id)+'/')
-    else:
-        form = GroupUserForm()
-        form.fields['user'].queryset = currGroup.user_set.all()
-
-    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser})
-
-@login_required
-def add_report(request, user_name_slug, folder_slug=None):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser,user_name_slug):
-        return HttpResponse("You are not authorized to view this page")
-
-    if request.method == 'POST':
-        form = ReportForm(request.POST)
-        if form.is_valid():
-            report = form.save(commit=False)
-            # Set fields not specified by the form
-            report.user = currUser
-            report.timeCreated = datetime.now()
-            # Specify whether the report should be placed in a folder
-            if folder_slug:
-                folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
-                report.folder = folder
-                report.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder_slug+'/')
-            else:
-                report.folder = None
-                report.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
-        else:
-            print(form.errors)
-    else:
-        form = ReportForm()
-
-    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'folder_slug': folder_slug})
-
-@login_required
-def report(request, report_slug):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser, None, None, report_slug):
-        return HttpResponse("You are not authorized to view this page")
-
-    # Obtain information about the specified report
-    report = Report.objects.filter(id=report_slug).first()
-    files = Attachment.objects.filter(report=report)
-
-    """ *** This passes in the current user --> Not the report's creator *** """
-    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files})
-
-@login_required
-def edit_report(request, user_name_slug, report_slug=None):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
-
-    report = Report.objects.filter(id=report_slug).first()
-
-    if request.method == 'POST':
-        form = ReportForm(request.POST, instance=report)
-        if form.is_valid():
-            form.save()
-            # Return the user back to their homepage
-            if report.folder:
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+report.folder.slug+'/')
-            else:
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
-        else:
-            print(form.errors)
-    else:
-        form = ReportForm(instance=report)
-
-    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'report': report})
-
-@login_required
-def add_file(request, report_slug=None):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser, None, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
-
-    report = Report.objects.filter(id=report_slug).first()
-
-    if request.method == 'POST':
-        form = AttachmentForm(request.POST, request.FILES)
-        if form.is_valid():
-            attachment = form.save(commit=False)
-            # Set fields not specified by the form
-            attachment.user = currUser
-            attachment.report = report
-            attachment.save()
-            # Encrypt the file if necessary
-            key = request.POST.get('key', None)
-            if key:
-                # Find the name of the original file
-                fileName = os.path.join(settings.MEDIA_ROOT, currUser.username, attachment.file.name)
-                # Encrypt the file and update the file name in the database
-                attachment.encrypted = True
-                encrypt_file(key, fileName)
-                attachment.file.name += '.enc'
-                # Remove the original file from memory
-                os.remove(fileName)
-                # Save updates to the database
-                attachment.save()
-            # Update the file's location in memory if necessary
-            if report.folder:
-                oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(attachment))
-                newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, report.folder.name, str(attachment))
-                os.rename(oldLocation,newLocation)
-                return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
-            return HttpResponseRedirect('/app/user/'+currUser.username+'/')
-        else:
-            print(form.errors)
-    else:
-        form = AttachmentForm()
-
-    return render(request, 'app/files.html', {'form': form, 'user': currUser, 'report': report})
-
-@login_required
-def delete_report(request, user_name_slug, report_slug):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
-
-    # Access information about the given report
-    report = Report.objects.filter(id=report_slug).first()
-    files = Attachment.objects.filter(report=report)
-
-    for file in files:
-        # Remove the file from memory
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
-        # Remove the file from the database
-        file.delete()
-    # Remove the report from the database
-    report.delete()
-
-    # Redirect the user to the appropriate page
-    if report.folder:
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
-    else:
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/')
-
-@login_required
-def delete_file(request, report_slug, file_slug):
-
-    # Validate that the user has access
-    currUser = request.user
-    if not hasAccess(currUser, None, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
-
-    # Access information about the given file
-    file = Attachment.objects.filter(id=file_slug).first()
-
-    # Determine where the file is stored in the file system
-    folder = file.report.folder
-    # Remove the file from the file system
-    if folder:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(file)))
-    else:
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file)))
-    # Remove the file from the database
-    file.delete()
-
-    return HttpResponseRedirect('/app/report/'+report_slug)
-
-@login_required
-def search(request):
-
-    if request.method == 'POST':
-        reports = Report.objects.filter(private=False)
-        basic_text = request.POST.get('search')
-        if basic_text:
-            # POST request from basic search
-            return render(request, 'app/home.html', {'reports': reports})
-        else:
-            # POST request from advanced search
-            short = request.POST.get('shortDesc', None)
-            if short:
-                shortWords = short.split()
-                for word in shortWords:
-                    reports = reports.filter(shortDesc__icontains=word)
-            long = request.POST.get('detailedDesc', None)
-            if long:
-                longWords = long.split()
-                for word in longWords:
-                    reports = reports.filter(detailedDesc__icontains=word)
-
-            keywords = request.POST.get('keywords', None)
-            if keywords:
-                keywordWords = keywords.split()
-                for word in keywordWords:
-                    reports = reports.filter(keywords__icontains=word)
-
-            location = request.POST.get('location', None)
-            if location:
-                reports = reports.filter(location__icontains=location)
-
-            dateOfIncident = request.POST.get('dateOfIncident', None)
-            if dateOfIncident:
-                reports = reports.filter(dateOfIndicent=dateOfIncident)
-
-            return render(request, 'app/home.html', {'reports': reports})
-    else:
-        form = SearchForm()
-
-    return render(request, 'app/search.html', {'form': form})
 
 @login_required
 def folder(request, user_name_slug, folder_slug):
@@ -490,126 +252,106 @@ def delete_folder(request, user_name_slug, folder_slug):
     # Remove the folder from the file system
     os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder.name))
 
-    return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
-def move_report(request, user_name_slug, report_slug):
+def group(request, group_id):
 
-    # Obtain information about the user and report
+    # Validate that the user has access
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
+    # User does not belong to the group
+    if not currUser.groups.filter(id=group_id).exists():
+        return HttpResponse("You are not authorized to view this page")
 
-    # Check if the report does not belong to the current user
-    if currUser != report.user:
-        # Tell the user that the page is restricted
+    # Retrieve reports shared with the group
+    currGroup = Group.objects.filter(id=group_id).first()
+    reports = currGroup.report_set.all()
+    requests = UserGroupRequest.objects.all()
+
+    return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'admin': currGroup.id == 1, 'requests': requests})
+
+"""
+  Should we add all admins to a group
+"""
+
+@login_required
+def add_group(request):
+
+    # Validate that the user has access
+    currUser = request.user
+    if not currUser.groups.filter(id=1).exists():
         return HttpResponse("You are not authorized to view this page")
 
     if request.method == 'POST':
-        dest = request.POST.get('dest', None)
-        if dest:
-            # User entered a folder name
-            if report.folder and report.folder.name == dest:
-                # Destination = current location
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
-            else:
-                folder = Folder.objects.filter(user=currUser,id=dest).first()
-                oldFolder = report.folder
-                oldRoot = os.path.join(settings.MEDIA_ROOT, currUser.username)
-                if oldFolder:
-                    oldRoot = os.path.join(oldRoot, oldFolder.name)
-                report.folder = folder
-                report.save()
-                files = Attachment.objects.filter(report=report)
-                for f in files:
-                    oldLocation = os.path.join(oldRoot, str(f))
-                    newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
-                    os.rename(oldLocation,newLocation)
-                    f.file.name = os.path.join(settings.MEDIA_ROOT, user_name_slug, folder.name, str(f))
-        else:
-            # User entered the home folder
-            if not report.folder:
-                # Destination = current location
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
-            else:
-                folder = report.folder
-                report.folder = None
-                report.save()
-                files = Attachment.objects.filter(report=report)
-                for f in files:
-                    oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
-                    newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
-                    os.rename(oldLocation,newLocation)
-                    f.file.name = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
-
-        return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
-
+        form = GroupForm(request.POST)
+        if form.is_valid():
+            # Create a group based on the fom
+            group = Group()
+            group.name = request.POST.get('name', None)
+            group.save()
+            # Automatically make the admins members of the group
+            admins = Group.objects.filter(id=1).first().user_set.all()
+            for admin in admins:
+                admin.groups.add(group)
+                admin.save()
+            return HttpResponseRedirect('/app/group/1/')
     else:
-        form = CopyMoveReportForm()
-        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
-
-    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report, 'move': True})
+        form = GroupForm
+    return render(request, 'app/add_group.html', {'form': form, 'user': currUser})
 
 @login_required
-def copy_report(request, user_name_slug, report_slug):
+def add_to_group(request, group_id):
 
-    # Obtain information about the user and report
+    # Validate that the user has access - any member can add a new member
     currUser = request.user
-    report = Report.objects.filter(id=report_slug).first()
-
-    # Check if the report does not belong to the current user
-    if currUser != report.user:
-        # Tell the user that the page is restricted
+    if not currUser.groups.filter(id=group_id).exists():
         return HttpResponse("You are not authorized to view this page")
 
+    # Get information about the current group
+    group = Group.objects.filter(id=group_id).first()
+
     if request.method == 'POST':
-        dest = request.POST.get('dest', None)
-        if dest:
-            # User entered a folder name
-            if report.folder and report.folder.name == dest:
-                # Destination = current location
-                return HttpResponse("This report already exists in the given location")
-            else:
-                folder = Folder.objects.filter(user=currUser,id=dest).first()
-                old_files = Attachment.objects.filter(report=report)
-                newReport = report
-                newReport.pk = None
-                newReport.save()
-                newReport.folder = folder
-                newReport.save()
-                for old_file in old_files:
-                    new_file = Attachment()
-                    new_file.user = currUser
-                    new_file.report = newReport
-                    new_file.encrypted = old_file.encrypted
-                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, os.path.split(old_file.file.name)[1]))
-                    new_file.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder.slug+'/')
-        else:
-            # User entered the home folder
-            if not report.folder:
-                # Destination = current location
-                return HttpResponse("This report already exists in the given location")
-            else:
-                old_files = Attachment.objects.filter(report=report)
-                newReport = report
-                newReport.pk = None
-                newReport.save()
-                newReport.folder = None
-                newReport.save()
-                for old_file in old_files:
-                    new_file = Attachment()
-                    new_file.user = currUser
-                    new_file.report = newReport
-                    new_file.encrypted = old_file.encrypted
-                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, os.path.split(old_file.file.name)[1]))
-                    new_file.save()
-                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        user.groups.add(group)
+        # Delete a pending request if necessary
+        pendingRequests = UserGroupRequest.objects.filter(user=user,group=group)
+        if pendingRequests:
+            for pendingRequest in pendingRequests:
+                pendingRequest.delete()
+        return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
     else:
-        form = CopyMoveReportForm()
-        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
+        form = GroupUserForm()
+        # Option to add any member not in the group
+        form.fields['user'].queryset = User.objects.exclude(id__in=group.user_set.all().values_list('id', flat=True))
 
-    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': True, 'group': group})
 
+@login_required
+def remove_from_group(request, group_id):
+
+    # Validate that the user has access - an admin can remove a member
+    currUser = request.user
+    if not currUser.groups.filter(id=1).exists():
+        return HttpResponse("You are not authorized to view this page")
+
+    # Get information about the current group
+    group = Group.objects.filter(id=group_id).first()
+    adminGroup = Group.objects.filter(id=1).first()
+
+    if request.method == 'POST':
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        user.groups.remove(group)
+        return HttpResponseRedirect('/app/group/'+str(group.id)+'/')
+    else:
+        form = GroupUserForm()
+        # Option to remove only members belonging to the group
+        form.fields['user'].queryset = group.user_set.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True))
+
+    return render(request, 'app/add_to_group.html', {'form': form, 'user': currUser, 'add': False, 'group': group})
+
+@login_required
 def share_report(request, user_name_slug, report_slug):
 
     # Obtain information about the user and report
@@ -633,6 +375,7 @@ def share_report(request, user_name_slug, report_slug):
 
     return render(request, 'app/share_report.html', {'form': form, 'user': currUser, 'report': report})
 
+@login_required
 def remove_report(request, group_id, report_slug):
 
     # Obtain information about the user and report
@@ -650,3 +393,415 @@ def remove_report(request, group_id, report_slug):
     report.save()
 
     return HttpResponseRedirect('/app/group/'+group_id+'/')
+
+@login_required
+def report(request, report_slug):
+
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser, None, None, report_slug):
+        return HttpResponse("You are not authorized to view this page")
+
+    # Obtain information about the specified report
+    report = Report.objects.filter(id=report_slug).first()
+    files = Attachment.objects.filter(report=report)
+
+    """ *** This passes in the current user --> Not the report's creator *** """
+    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files})
+
+@login_required
+def add_report(request, user_name_slug, folder_slug=None):
+
+    # Validate that the user has access
+    currUser = request.user
+    if currUser.username != user_name_slug:
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        form = ReportForm(request.POST)
+        if form.is_valid():
+            report = form.save(commit=False)
+            # Set fields not specified by the form
+            report.user = currUser
+            report.timeCreated = datetime.now()
+            # Specify whether the report should be placed in a folder
+            if folder_slug:
+                folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
+                report.folder = folder
+                report.save()
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder_slug+'/')
+            else:
+                report.folder = None
+                report.save()
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        else:
+            print(form.errors)
+    else:
+        form = ReportForm()
+
+    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'folder_slug': folder_slug})
+
+@login_required
+def edit_report(request, user_name_slug, report_slug=None):
+
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
+        return HttpResponse("You are not authorized to view this page")
+
+    report = Report.objects.filter(id=report_slug).first()
+
+    if request.method == 'POST':
+        form = ReportForm(request.POST, instance=report)
+        if form.is_valid():
+            form.save()
+            # Return the user back to their homepage
+            if report.folder:
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+report.folder.slug+'/')
+            else:
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        else:
+            print(form.errors)
+    else:
+        form = ReportForm(instance=report)
+
+    return render(request, 'app/add_report.html', {'form': form, 'user': currUser, 'report': report})
+
+@login_required
+def copy_report(request, user_name_slug, report_slug):
+
+    # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        dest = request.POST.get('dest', None)
+        if dest:
+            # User entered a folder name
+            if report.folder and report.folder.name == dest:
+                # Destination = current location
+                return HttpResponse("This report already exists in the given location")
+            else:
+                wasInFolder = False
+                if report.folder:
+                    wasInFolder = True
+                    folderSlug = report.folder.slug
+                folder = Folder.objects.filter(user=currUser,id=dest).first()
+                old_files = Attachment.objects.filter(report=report)
+                newReport = report
+                newReport.pk = None
+                newReport.save()
+                newReport.folder = folder
+                newReport.save()
+                for old_file in old_files:
+                    new_file = Attachment()
+                    new_file.user = currUser
+                    new_file.report = newReport
+                    new_file.encrypted = old_file.encrypted
+                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, os.path.split(old_file.file.name)[1]))
+                    new_file.save()
+                if wasInFolder:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folderSlug+'/')
+                else:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        else:
+            # User entered the home folder
+            if not report.folder:
+                # Destination = current location
+                return HttpResponse("This report already exists in the given location")
+            else:
+                folderSlug = report.folder.slug
+                old_files = Attachment.objects.filter(report=report)
+                newReport = report
+                newReport.pk = None
+                newReport.save()
+                newReport.folder = None
+                newReport.save()
+                for old_file in old_files:
+                    new_file = Attachment()
+                    new_file.user = currUser
+                    new_file.report = newReport
+                    new_file.encrypted = old_file.encrypted
+                    new_file.file = File(old_file.file, os.path.join(settings.MEDIA_ROOT, currUser.username, os.path.split(old_file.file.name)[1]))
+                    new_file.save()
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folderSlug)
+    else:
+        form = CopyMoveReportForm()
+        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
+
+    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})
+
+@login_required
+def move_report(request, user_name_slug, report_slug):
+
+    # Obtain information about the user and report
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+
+    # Check if the report does not belong to the current user
+    if currUser != report.user:
+        # Tell the user that the page is restricted
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == 'POST':
+        dest = request.POST.get('dest', None)
+        if dest:
+            # User entered a folder name
+            if report.folder and report.folder.name == dest:
+                # Destination = current location
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+report.folder.slug+'/')
+            else:
+                folder = Folder.objects.filter(user=currUser,id=dest).first()
+                oldFolder = report.folder
+                oldRoot = os.path.join(settings.MEDIA_ROOT, currUser.username)
+                if oldFolder:
+                    oldRoot = os.path.join(oldRoot, oldFolder.name)
+                report.folder = folder
+                report.save()
+                files = Attachment.objects.filter(report=report)
+                for f in files:
+                    oldLocation = os.path.join(oldRoot, str(f))
+                    newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
+                    os.rename(oldLocation,newLocation)
+                    f.file.name = os.path.join(settings.MEDIA_ROOT, user_name_slug, folder.name, str(f))
+                if oldFolder:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+oldFolder.slug)
+                else:
+                    return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+        else:
+            # User entered the home folder
+            if not report.folder:
+                # Destination = current location
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+            else:
+                folder = report.folder
+                report.folder = None
+                report.save()
+                files = Attachment.objects.filter(report=report)
+                for f in files:
+                    oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(f))
+                    newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
+                    os.rename(oldLocation,newLocation)
+                    f.file.name = os.path.join(settings.MEDIA_ROOT, currUser.username, str(f))
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/folder/'+folder.slug+'/')
+
+    else:
+        form = CopyMoveReportForm()
+        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
+
+    return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report, 'move': True})
+
+@login_required
+def delete_report(request, user_name_slug, report_slug):
+
+    # Validate that the user has access
+    currUser = request.user
+    report = Report.objects.filter(id=report_slug).first()
+    if report.user != currUser and not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    # Access information about the given report
+    files = Attachment.objects.filter(report=report)
+
+    for file in files:
+        # Remove the file from memory
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
+        # Remove the file from the database
+        file.delete()
+    # Remove the report from the database
+    report.delete()
+
+    # Redirect the user to the appropriate page
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@login_required
+def add_file(request, report_slug=None):
+
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser, None, None, report_slug, True):
+        return HttpResponse("You are not authorized to view this page")
+
+    report = Report.objects.filter(id=report_slug).first()
+
+    if request.method == 'POST':
+        form = AttachmentForm(request.POST, request.FILES)
+        if form.is_valid():
+            attachment = form.save(commit=False)
+            # Set fields not specified by the form
+            attachment.user = currUser
+            attachment.report = report
+            attachment.save()
+            attachment.hash = hash(attachment.file.name)
+            attachment.save()
+            # Encrypt the file if necessary
+            key = request.POST.get('key', None)
+            if key:
+                # Find the name of the original file
+                fileName = os.path.join(settings.MEDIA_ROOT, currUser.username, attachment.file.name)
+                # Encrypt the file and update the file name in the database
+                attachment.encrypted = True
+                encrypt_file(key, fileName)
+                attachment.file.name += '.enc'
+                # Remove the original file from memory
+                os.remove(fileName)
+                # Save updates to the database
+                attachment.save()
+                attachment.hash = hash(attachment.file.name)
+                attachment.save()
+            # Update the file's location in memory if necessary
+            if report.folder:
+                oldLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, str(attachment))
+                newLocation = os.path.join(settings.MEDIA_ROOT, currUser.username, report.folder.name, str(attachment))
+                os.rename(oldLocation,newLocation)
+                return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
+            return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+        else:
+            print(form.errors)
+    else:
+        form = AttachmentForm()
+
+    return render(request, 'app/files.html', {'form': form, 'user': currUser, 'report': report})
+
+@login_required
+def delete_file(request, report_slug, file_slug):
+
+    # Validate that the user has access
+    currUser = request.user
+    if not hasAccess(currUser, None, None, report_slug, True):
+        return HttpResponse("You are not authorized to view this page")
+
+    # Access information about the given file
+    file = Attachment.objects.filter(id=file_slug).first()
+
+    # Determine where the file is stored in the file system
+    folder = file.report.folder
+    # Remove the file from the file system
+    if folder:
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name, str(file)))
+    else:
+        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file)))
+    # Remove the file from the database
+    file.delete()
+
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+
+@login_required
+def search(request):
+
+    if request.method == 'POST':
+        reports = Report.objects.all()
+        if not is_admin(request.user):
+            reports = reports.filter(private=False)
+        basic_text = request.POST.get('search')
+        if basic_text:
+            # POST request from basic search
+            entry_query = get_query(basic_text, ['shortDesc', 'detailedDesc', 'keywords',])
+            reports = reports.filter(entry_query)
+            return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
+        else:
+            print(request.POST)
+            # POST request from advanced search
+            short = request.POST.get('shortDesc', None)
+            if short:
+                entry_query = get_query(short, ['shortDesc',])
+                reports = reports.filter(entry_query)
+
+            long = request.POST.get('detailedDesc', None)
+            if long:
+                entry_query = get_query(long, ['detailedDesc',])
+                reports = reports.filter(entry_query)
+
+            keywords = request.POST.get('keywords', None)
+            if keywords:
+                entry_query = get_query(keywords, ['keywords',])
+                reports = reports.filter(entry_query)
+
+            location = request.POST.get('location', None)
+            if location:
+                entry_query = get_query(location, ['location',])
+                reports = reports.filter(entry_query)
+
+            # This doesn't work correctly - evaluates to None
+            dateOfIncident_day = int(request.POST.get('dateOfIncident_day', None))
+            dateOfIncident_month = int(request.POST.get('dateOfIncident_month', None))
+            dateOfIncident_year = int(request.POST.get('dateOfIncident_year', None))
+            if dateOfIncident_day != 0:
+                reports = reports.filter(dateOfIncident__day=dateOfIncident_day)
+            if dateOfIncident_month != 0:
+                reports = reports.filter(dateOfIncident__month=dateOfIncident_month)
+            if dateOfIncident_year != 0:
+                reports = reports.filter(dateOfIncident__year=dateOfIncident_year)
+
+            return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
+    else:
+        form = SearchForm()
+
+    return render(request, 'app/search.html', {'form': form})
+
+@login_required
+def group_request(request):
+
+    if request.method == 'POST':
+        form = UserGroupRequestForm(request.POST)
+        if form.is_valid():
+            groupRequest = form.save(commit=False)
+            # Set fields not specified by the form
+            groupRequest.user = request.user
+            groupRequest.save()
+            return HttpResponseRedirect('/app/')
+        else:
+            print(form.errors)
+    else:
+        form = UserGroupRequestForm()
+        # Request access only to groups which one is not a member
+        form.fields['group'].queryset = Group.objects.exclude(id__in=request.user.groups.all().values_list('id', flat=True))
+
+    return render(request, 'app/request.html', {'form': form})
+
+@login_required
+def view_group_requests(request):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+    # Get info about all group requests
+    group_requests = UserGroupRequest.objects.all()
+
+    return render(request, 'app/view_requests.html', {'user': currUser, 'requests': group_requests})
+
+@login_required
+def confirm_request(request, request_id):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
+
+    requestUser = groupRequest.user
+    requestGroup = groupRequest.group
+
+    requestUser.groups.add(requestGroup)
+    requestUser.save()
+
+    groupRequest.delete()
+
+    return HttpResponseRedirect('/app/group/1/')
+
+@login_required
+def delete_request(request, request_id):
+
+    currUser = request.user
+    if not is_admin(currUser):
+        return HttpResponse("You are not authorized to view this page")
+
+    groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
+    groupRequest.delete()
+
+    return HttpResponseRedirect('/app/group/1/')

@@ -5,10 +5,9 @@
     </head>
 
     <body>
-        <h1>Create a Group</h1>
+        <h1>Request Group Access</h1>
 
-        <!-- This line determines whether to call the add_report or edit_report view -->
-        <form id="group_form" method="post" action=""/>
+        <form id="group_request_form" method="post" action="/app/request-group-access/"/>
 
             {% csrf_token %}
             {% for hidden in form.hidden_fields %}
@@ -22,7 +21,7 @@
                 <br />
             {% endfor %}
 
-            <br/><input type="submit" value="Create" /> <button type="button" onclick="window.location = '/app/group/1/'">Cancel</button>
+            <br/><input type="submit" value="Done"/> <button type="button" onclick="window.location = '/app/'">Cancel</button>
         </form>
     </body>
 
