@@ -46,7 +46,12 @@
                 {% for report in reports %}
                 <li>
                     <p>{{report.shortDesc}}</p>
+                    <p>
                     <a href="/app/report/{{ report.id }}/">View Report</a>
+                    {% if admin %}
+                         | <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
+                    {% endif %}
+                    </p>
                 </li>
                 {% endfor %}
             </ul>

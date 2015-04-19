@@ -61,7 +61,7 @@ def home(request):
         reports = Report.objects.filter(private=False)
     groups = currUser.groups.all()
     # Direct the user to the SecureWitness homepage
-    return render(request, 'app/home.html', {'reports': reports, 'user': currUser, 'groups': groups})
+    return render(request, 'app/home.html', {'reports': reports, 'user': currUser, 'groups': groups, 'admin': is_admin(currUser)})
 
 def register(request):
     if request.method == 'POST':
@@ -230,7 +230,7 @@ def delete_folder(request, user_name_slug, folder_slug):
     # Remove the folder from the file system
     os.rmdir(os.path.join(settings.MEDIA_ROOT,user_name_slug,folder.name))
 
-    return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
 def group(request, group_id):
@@ -578,11 +578,11 @@ def delete_report(request, user_name_slug, report_slug):
 
     # Validate that the user has access
     currUser = request.user
-    if not hasAccess(currUser, user_name_slug, None, report_slug, True):
+    report = Report.objects.filter(id=report_slug).first()
+    if report.user != currUser and not is_admin(currUser):
         return HttpResponse("You are not authorized to view this page")
 
     # Access information about the given report
-    report = Report.objects.filter(id=report_slug).first()
     files = Attachment.objects.filter(report=report)
 
     for file in files:
@@ -594,10 +594,7 @@ def delete_report(request, user_name_slug, report_slug):
     report.delete()
 
     # Redirect the user to the appropriate page
-    if report.folder:
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/folder/'+report.folder.slug+'/')
-    else:
-        return HttpResponseRedirect('/app/user/'+currUser.username+'/')
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
 def add_file(request, report_slug=None):
@@ -665,19 +662,21 @@ def delete_file(request, report_slug, file_slug):
     # Remove the file from the database
     file.delete()
 
-    return HttpResponseRedirect('/app/report/'+report_slug)
+    return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
 
 @login_required
 def search(request):
 
     if request.method == 'POST':
-        reports = Report.objects.filter(private=False)
+        reports = Report.objects.all()
+        if not is_admin(request.user):
+            reports = reports.filter(private=False)
         basic_text = request.POST.get('search')
         if basic_text:
             # POST request from basic search
             entry_query = get_query(basic_text, ['shortDesc', 'detailedDesc', 'keywords',])
             reports = reports.filter(entry_query)
-            return render(request, 'app/home.html', {'reports': reports})
+            return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
         else:
             print(request.POST)
             # POST request from advanced search
@@ -712,7 +711,7 @@ def search(request):
             if dateOfIncident_year != 0:
                 reports = reports.filter(dateOfIncident__year=dateOfIncident_year)
 
-            return render(request, 'app/home.html', {'reports': reports})
+            return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
     else:
         form = SearchForm()
 
