@@ -53,9 +53,12 @@ def is_admin(user):
     return user.groups.filter(id=1).exists()
 
 def home(request):
-    # Create a list of all public reports
-    reports = Report.objects.filter(private=False)
     currUser = request.user
+    # Create a list of all reports
+    if is_admin(currUser):
+        reports = Report.objects.all()
+    else:
+        reports = Report.objects.filter(private=False)
     groups = currUser.groups.all()
     # Direct the user to the SecureWitness homepage
     return render(request, 'app/home.html', {'reports': reports, 'user': currUser, 'groups': groups})
