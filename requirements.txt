@@ -36,6 +36,3 @@ usb-creator==0.2.23
 wheel==0.24.0
 xdiagnose==3.6.6
 xkit==0.0.0
-psycopg2==2.5.1
-static==0.4
-wsgiref==0.1.2
