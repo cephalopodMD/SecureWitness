@@ -64,6 +64,10 @@ DATABASES = {
     }
 }
 
+import dj_database_url
+DATABASES = {}
+DATABASES['default'] =  dj_database_url.config()
+
 
 # Internationalization
 # https://docs.djangoproject.com/en/1.7/topics/i18n/
