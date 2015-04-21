@@ -1,29 +1,47 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SecureWitness</title>
-        <!-- Bootstrap core CSS -->
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-        <!-- jQuery library -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <!-- Latest compiled JavaScript -->
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-        <!-- Bootstrap theme -->
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
-    </head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SecureWitness</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <!-- Bootstrap theme -->
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
+</head>
 
-    <body>
-        <h1>Register with SecureWitness</h1>
-        <strong>Register here!</strong><br />
-        <form id="user_form" method="post" action="/app/register/" enctype="multipart/form-data">
-            {% csrf_token %}
-            <!-- Wraps each form element in a paragraph -->
-            {{ user_form.as_p }}
-            <input type="submit" name="submit" value="Register" />
-        </form>
-    </body>
+<body>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="#">SecureWitness</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-right">
+                <li><a href="/app/register/"><span class="glyphicon glyphicon-user"></span> Register</a></li>
+                <li><a href="/app/login/"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<h1 style="text-align:center">Registration</h1>
+<form style="text-align:center" id="user_form" method="post" action="/app/register/" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!-- Wraps each form element in a paragraph -->
+    {{ user_form.as_p }}
+    <input type="submit" name="submit" value="Register" />
+</form>
+</body>
 
 </html>

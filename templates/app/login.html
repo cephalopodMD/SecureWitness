@@ -16,12 +16,31 @@
     </head>
 
     <body>
-        <h1>Login to SecureWitness</h1>
-        <form id="login_form" method="post" action="/app/login/">
-            {% csrf_token %}
-            Username: <input type="text" name="username" value="" size="50" /><br />
-            Password: <input type="password" name="password" value="" size="50" /><br />
-            <input type="submit" value="submit" />
-        </form>
+    <nav class="navbar navbar-inverse">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#">SecureWitness</a>
+            </div>
+            <div class="collapse navbar-collapse" id="myNavbar">
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="/app/register/"><span class="glyphicon glyphicon-user"></span> Register</a></li>
+                    <li><a href="/app/login/"><span class="glyphicon glyphicon-log-in"></span> Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <h2 style="text-align:center">Login</h2>
+    <form style="text-align:center" id="login_form" method="post" action="/app/login/">
+        {% csrf_token %}
+        Username: <input type="text" name="username" value="" size="50" /><br />
+        Password: <input type="password" name="password" value="" size="50" /><br />
+        <input type="submit" value="submit" />
+    </form>
     </body>
 </html>
