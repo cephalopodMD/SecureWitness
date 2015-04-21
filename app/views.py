@@ -6,6 +6,8 @@ from app.forms import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
+from django.core.mail import send_mail
+from django.conf import settings
 from datetime import datetime
 from SecureWitness import settings
 from django.db.models import Q
@@ -76,6 +78,12 @@ def register(request):
             # Grab information about the user's credentials
             username = request.POST.get('username')
             password = request.POST.get('password')
+            # Send confirmation email
+            subject = 'Thank you for joining SecureWitness'
+            message = 'Welcome to the SecureWitness community. We love you.'
+            from_email = settings.EMAIL_HOST_USER
+            to_list = [currUser.email, settings.EMAIL_HOST_USER]
+            send_mail(subject, message, from_email, to_list, fail_silently=True)
             # Validate the user's credentials
             currUser = authenticate(username=username, password=password)
             # Check if the user's credentials were valid
