@@ -72,3 +72,18 @@ class ShareReportForm(forms.Form):
 
 class RemoveUserForm(forms.Form):
     user = forms.ModelChoiceField(queryset=None, help_text="User Name")
+
+class ForgotPasswordForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'email',)
+
+class ResetPasswordForm(forms.ModelForm):
+    password = forms.CharField(widget=forms.PasswordInput())
+    class Meta:
+        model = User
+        fields = ('username', 'email', 'password')
+
+class ChangePasswordForm(forms.Form):
+    oldPassword = forms.CharField(widget=forms.PasswordInput(), help_text="Old Password")
+    newPassword = forms.CharField(widget=forms.PasswordInput(), help_text="New Password")

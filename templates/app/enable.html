@@ -1,39 +1,40 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SecureWitness</title>
-        <!-- Bootstrap core CSS -->
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-        <!-- jQuery library -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <!-- Latest compiled JavaScript -->
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-        <!-- Bootstrap theme -->
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
-    </head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SecureWitness</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <!-- Bootstrap theme -->
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
+</head>
 
-    <body>
-        <h1>Enable Account</h1>
+<body>
+<h1>Enable Account</h1>
 
-        <form id="enable_form" method="post" action="/app/enable/"/>
+<form id="enable_form" method="post" action="/app/enable/"/>
 
-            {% csrf_token %}
-            {% for hidden in form.hidden_fields %}
-                {{ hidden }}
-            {% endfor %}
+{% csrf_token %}
+{% for hidden in form.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
 
-            {% for field in form.visible_fields %}
-                {{ field.errors }}
-                {{ field.help_text }}
-                {{ field }}
-                <br />
-            {% endfor %}
+{% for field in form.visible_fields %}
+    {{ field.errors }}
+    {{ field.help_text }}
+    {{ field }}
+    <br/>
+{% endfor %}
 
-            <br/><input type="submit" value="Confirm"/> <button type="button" onclick="window.location = '/app/'">Cancel</button>
-        </form>
-    </body>
+<br/><input type="submit" value="Confirm"/>
+<button type="button" onclick="window.location = '/app/'">Cancel</button>
+</form>
+</body>
 
 </html>

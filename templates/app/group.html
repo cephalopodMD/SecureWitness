@@ -1,87 +1,116 @@
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>SecureWitness</title>
-        <!-- Bootstrap core CSS -->
-        <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
-        <!-- jQuery library -->
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-        <!-- Latest compiled JavaScript -->
-        <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
-        <!-- Bootstrap theme -->
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
-        <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
-    </head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>SecureWitness</title>
+    <!-- Bootstrap core CSS -->
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery library -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <!-- Latest compiled JavaScript -->
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/js/bootstrap.min.js"></script>
+    <!-- Bootstrap theme -->
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/material.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/bootstrap.material-design/0.3.0/css/roboto.min.css" rel="stylesheet">
+</head>
 
-    <body>
-        <!-- Displays the user's username as a header -->
-        <h1>Group: {{ group.name }}</h1>
-        <p>
-        <a href="/app/">SecureWitness Home</a>
-         |
-        <a href="/app/user/{{user.username}}/">View Your Homepage</a>
-         |
-        <a href="/app/logout/">Logout</a>
-         |
-        <a href="/app/user/{{user.username}}/delete_account/">Delete Your Account</a><br />
-        </p>
-
-        {% if user.groups.all %}
-            <p><strong>Groups</strong></p>
-            <p>
-            {% for group in user.groups.all %}
-                <a href="/app/group/{{group.id}}/">{{group.name}}</a>
-            {% endfor %}
-            </p>
-        {% endif %}
-        {%  if admin %}
-            <p>
-                <a href="/app/suspend-user/">Suspend a User</a>
-                 |
-                <a href="/app/add_group/">Create a new group</a>
-                 |
-                <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
-            </p>
-            <p><strong>Group Requests</strong></p>
-            {% if requests %}
-                <ul>
-                    {% for request in requests %}
-                        <li>
-                            <p>User: {{ request.user }}</p>
-                            <p>Group: {{ request.group }}</p>
-                            <p>Reason: {{ request.text }}</p>
-                            <p><a href="/app/request/{{request.id}}/confirm">Confirm</a> | <a href="/app/request/{{request.id}}/delete">Delete Request</a></p>
-                        </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p>There are no group requests at this time</p>
-            {% endif %}
-        {% else %}
-            <p>
-                <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
-                 |
-                <a href="/app/group/{{ group.id }}/remove_from_group/">Remove a user from this group</a>
-            </p>
-            {% if reports %}
-                <p><strong>Reports</strong></p>
-                <ul>
-                    {% for report in reports %}
-                    <li>
-                        <p>{{report.shortDesc}}</p>
-                        <a href="/app/report/{{ report.id }}/">View Report</a>
-                        {% if report.user == user %}
-                             |
-                            <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove/">Remove from Group</a>
+<nav class="navbar navbar-inverse">
+    <div class="container-fluid">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/app/"> SecureWitness </a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+            <ul class="nav navbar-nav navbar-left">
+                <li><a href="/app/user/{{ user.username }}/"><span class="glyphicon glyphicon-user"></span> Your
+                    Homepage </a></li>
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        Groups <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="/app/request-group-access/">Request Access to a Group</a></li>
+                        {% if user.groups.all %}
+                            <li class="divider"></li>
+                            {% for group in user.groups.all %}
+                                <li><a href="/app/group/{{ group.id }}/">{{ group.name }}</a></li>
+                            {% endfor %}
                         {% endif %}
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% else %}
-                <p><strong>This group doesn't contain any reports.</strong></p>
-            {% endif %}
-        {%  endif %}
-    </body>
+                    </ul>
+                </li>
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">
+                        Account Settings <span class="caret"></span></a>
+                    <ul class="dropdown-menu" role="menu">
+                        <li><a href="/app/user/{{ user.username }}/change_password/">Change Password</a></li>
+                        <li><a href="/app/user/{{ user.username }}/delete_account/">Delete Account</a></li>
+                    </ul>
+                </li>
+                <li><a href="/app/logout/"><span class="glyphicon glyphicon-log-in"></span> Logout </a></li>
+            </ul>
+        </div>
+    </div>
+</nav>
+<body>
+<!-- Displays the user's username as a header -->
+<h1>Group: {{ group.name }}</h1>
+
+{% if admin %}
+    <p>
+        <a href="/app/suspend-user/">Suspend a User</a>
+        |
+        <a href="/app/add_group/">Create a new group</a>
+        |
+        <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
+    </p>
+    <p><strong>Group Requests</strong></p>
+    {% if requests %}
+        <ul>
+            {% for request in requests %}
+                <li>
+                    <p>User: {{ request.user }}</p>
+
+                    <p>Group: {{ request.group }}</p>
+
+                    <p>Reason: {{ request.text }}</p>
+
+                    <p><a href="/app/request/{{ request.id }}/confirm">Confirm</a> | <a
+                            href="/app/request/{{ request.id }}/delete">Delete Request</a></p>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>There are no group requests at this time</p>
+    {% endif %}
+{% else %}
+    <p>
+        <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
+        |
+        <a href="/app/group/{{ group.id }}/remove_from_group/">Remove a user from this group</a>
+    </p>
+    {% if reports %}
+        <p><strong>Reports</strong></p>
+        <ul>
+            {% for report in reports %}
+                <li>
+                    <p>{{ report.shortDesc }}</p>
+                    <a href="/app/report/{{ report.id }}/">View Report</a>
+                    {% if report.user == user %}
+                        |
+                        <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove/">Remove from Group</a>
+                    {% endif %}
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p><strong>This group doesn't contain any reports.</strong></p>
+    {% endif %}
+{% endif %}
+</body>
 </html>

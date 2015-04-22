@@ -157,6 +157,33 @@ def user_logout(request):
     return HttpResponseRedirect('/app/')
 
 @login_required
+def change_password(request, user_name_slug):
+
+    currUser = request.user
+    if currUser.username != user_name_slug:
+        return HttpResponse("You are not authorized to view this page")
+
+    if request.method == "POST":
+        form = ChangePasswordForm(request.POST)
+        if form.is_valid():
+            oldPassword = request.POST.get('oldPassword')
+            currUser = authenticate(username=user_name_slug, password=oldPassword)
+            if currUser:
+                currUser.set_password(request.POST.get('newPassword'))
+                currUser.save()
+                login(request, currUser)
+                return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+            else:
+                return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
+        else:
+            print(form.errors)
+    else:
+        form = ChangePasswordForm()
+
+    return render(request, 'app/change_password.html', {'form': form, 'user': currUser})
+
+
+@login_required
 def delete_account(request, user_name_slug):
 
     # Validate that the user has access

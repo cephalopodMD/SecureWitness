@@ -12,6 +12,7 @@ urlpatterns = patterns('',
     url(r'^user/(?P<user_name_slug>[\w\-]+)/delete_account/$', views.delete_account, name='delete account'),
     # User homepage
     url(r'^user/(?P<user_name_slug>[\w\-]+)/$', views.user, name='user'),
+    url(r'^user/(?P<user_name_slug>[\w\-]+)/change_password/$', views.change_password, name='change password'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/folder/(?P<folder_slug>[\w\-]+)/$', views.folder, name='folder'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/add_folder/$', views.add_folder, name='add folder'),
     url(r'^user/(?P<user_name_slug>[\w\-]+)/folder/(?P<folder_slug>[\w\-]+)/delete/$', views.delete_folder, name='delete folder'),
