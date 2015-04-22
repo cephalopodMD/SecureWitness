@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from app.models import Report, Attachment, Folder, UserGroupRequest
+from app.models import Report, Attachment, Folder, UserGroupRequest, Registration
 from django.forms.extras.widgets import SelectDateWidget
 
 YEAR_CHOICES = ()
@@ -49,6 +49,10 @@ class UserGroupRequestForm(forms.ModelForm):
     class Meta:
         model = UserGroupRequest
         exclude = ('user',)
+
+class RegistrationForm(forms.Form):
+    user = forms.CharField(max_length=128, help_text="Username")
+    key = forms.CharField(max_length=128, help_text="Code")
 
 class SearchForm(forms.Form):
     shortDesc = forms.CharField(required=False, max_length=128, help_text="Short description")

@@ -1,8 +1,9 @@
-import os, re
+import os, re, string, random
 from django.core.files import File
 from django.shortcuts import render
 from app.encryption import encrypt_file, hash
 from app.forms import *
+from app.models import *
 from django.contrib.auth import authenticate, login, logout
 from django.http import HttpResponseRedirect, HttpResponse
 from django.contrib.auth.decorators import login_required
@@ -73,6 +74,12 @@ def register(request):
             currUser = user_form.save()
             # Hash the password with the set_password method
             currUser.set_password(currUser.password)
+            # Deactivate the user until the complete email confirmation
+            currUser.is_active = False
+            regstr = Registration()
+            regstr.user = currUser
+            regstr.key = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+            regstr.save()
             # Update the user object
             currUser.save()
             # Grab information about the user's credentials
@@ -80,35 +87,41 @@ def register(request):
             password = request.POST.get('password')
             # Send confirmation email
             subject = 'Thank you for joining SecureWitness'
-            message = 'Welcome to the SecureWitness community. We love you.'
+            message = 'Welcome to the SecureWitness community. To enable your account, please click on the following link:\nhttp://127.0.0.1:8000/app/user/' + currUser.username + '/enable/\nYour username is: ' + regstr.user.username + '\nYour code is: ' + regstr.key
             from_email = settings.EMAIL_HOST_USER
             to_list = [currUser.email, settings.EMAIL_HOST_USER]
             send_mail(subject, message, from_email, to_list, fail_silently=True)
-            # Validate the user's credentials
-            currUser = authenticate(username=username, password=password)
-            # Check if the user's credentials were valid
-            if currUser:
-                # Check if the user account is active
-                if currUser.is_active:
-                    # Log the user in.
-                    login(request, currUser)
-                    # Create a folder for the user in the media directory
-                    os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
-                    # Redirect the user to the home page
-                    return HttpResponseRedirect('/app/')
-                else:
-                    # An inactive account was used
-                    return HttpResponse("Your SecureWitness account is disabled.")
-            else:
-                # Bad login details were provided
-                print("Invalid login details: {0}, {1}".format(username, password))
-                return HttpResponse("Invalid login details supplied.")
+            # Create a folder for the user in the file system
+            os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
+            # Redirect the user to the enable page
+            return HttpResponseRedirect('/app/enable/')
         else:
             print(user_form.errors)
     else:
         user_form = UserForm()
 
     return render(request, 'app/register.html', {'user_form': user_form})
+
+def enable(request):
+    if request.method == 'POST':
+        reg_form = RegistrationForm(request.POST)
+        if reg_form.is_valid():
+            user_str = request.POST.get('user', None)
+            key_str = request.POST.get('key', None)
+            entered_user = User.objects.filter(username=user_str).first()
+            regstr = Registration.objects.filter(user=entered_user, key=key_str).first()
+            if regstr:
+                regstr.delete()
+                entered_user.is_active = True
+                entered_user.save()
+                return HttpResponseRedirect('/app/login/')
+            else:
+                return HttpResponseRedirect('/app/enable/')
+        else:
+            print(reg_form.errors)
+    else:
+        reg_form = RegistrationForm()
+    return render(request, 'app/enable.html', {'form': reg_form})
 
 def user_login(request):
     if request.method == 'POST':
@@ -143,12 +156,6 @@ def user_logout(request):
     # Take the user back to the homepage
     return HttpResponseRedirect('/app/')
 
-"""
-  What should happen to a user's reports when they
-  delete their account? Should we remove them all
-  from the database or will this cause model key
-  issues?
-"""
 @login_required
 def delete_account(request, user_name_slug):
 
@@ -184,7 +191,6 @@ def suspend_user(request):
         form.fields['user'].queryset = User.objects.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True))
 
     return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser})
-
 
 @login_required
 def user(request, user_name_slug):
@@ -277,10 +283,6 @@ def group(request, group_id):
     requests = UserGroupRequest.objects.all()
 
     return render(request, 'app/group.html', {'user': currUser, 'reports': reports, 'group': currGroup, 'admin': currGroup.id == 1, 'requests': requests})
-
-"""
-  Should we add all admins to a group
-"""
 
 @login_required
 def add_group(request):

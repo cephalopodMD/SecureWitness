@@ -53,3 +53,6 @@ class Attachment(models.Model):
     def __str__(self):
         return os.path.split(self.file.name)[1]
 
+class Registration(models.Model):
+    user = models.ForeignKey(User, help_text="Username")
+    key = models.CharField(max_length=128, blank=True, help_text="Code")
