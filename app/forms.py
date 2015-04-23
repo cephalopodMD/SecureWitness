@@ -63,6 +63,7 @@ class UserGroupRequestForm(forms.ModelForm):
 
 class RegistrationForm(forms.Form):
     user = forms.CharField(max_length=128, help_text="Username")
+    password = forms.CharField(widget=forms.PasswordInput(), help_text="Password")
     key = forms.CharField(max_length=128, help_text="Code")
 
 

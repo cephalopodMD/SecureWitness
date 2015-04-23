@@ -119,15 +119,24 @@ def enable(request):
         if reg_form.is_valid():
             user_str = request.POST.get('user', None)
             key_str = request.POST.get('key', None)
+            password_str = request.POST.get('password', None)
             entered_user = User.objects.filter(username=user_str).first()
             regstr = Registration.objects.filter(user=entered_user, key=key_str).first()
-            if regstr:
-                regstr.delete()
-                entered_user.is_active = True
-                entered_user.save()
-                return HttpResponseRedirect('/app/login/')
+            currUser = authenticate(username=user_str,password=password_str)
+            if currUser:
+                if regstr:
+                    regstr.delete()
+                    currUser.is_active = True
+                    currUser.save()
+                    login(request, currUser)
+                    return HttpResponseRedirect('/app/')
+                else:
+                    return HttpResponseRedirect('/app/enable/')
             else:
-                return HttpResponseRedirect('/app/enable/')
+                # Bad login details were provided
+                print("Invalid login details: {0}, {1}".format(user_str, password_str))
+                return HttpResponse("Invalid login details supplied.")
+
         else:
             print(reg_form.errors)
     else:
