@@ -4,13 +4,16 @@ from SecureWitness.settings import MEDIA_ROOT
 from django.template.defaultfilters import slugify
 import os
 
+
 def get_upload_path(instance, filename):
     return os.path.join(MEDIA_ROOT, instance.user.username, filename)
+
 
 class UserGroupRequest(models.Model):
     user = models.ForeignKey(User)
     group = models.ForeignKey(Group, help_text="Group")
     text = models.TextField(blank=True, help_text="Reason")
+
 
 class Folder(models.Model):
     user = models.ForeignKey(User)
@@ -23,6 +26,7 @@ class Folder(models.Model):
 
     def __str__(self):
         return str(self.name)
+
 
 class Report(models.Model):
     timeCreated = models.DateTimeField('Time created')
@@ -43,6 +47,7 @@ class Report(models.Model):
     def __str__(self):
         return str(self.id) + ': ' + str(self.shortDesc)
 
+
 class Attachment(models.Model):
     user = models.ForeignKey(User)
     report = models.ForeignKey(Report)
@@ -52,6 +57,7 @@ class Attachment(models.Model):
 
     def __str__(self):
         return os.path.split(self.file.name)[1]
+
 
 class Registration(models.Model):
     user = models.ForeignKey(User, help_text="Username")

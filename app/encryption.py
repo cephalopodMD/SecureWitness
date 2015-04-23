@@ -3,6 +3,7 @@ from Crypto import Random
 from Crypto.Cipher import AES
 from Crypto.Hash import MD5
 
+
 def encrypt_file(key, in_filename, chunksize=1024):
     """ Encrypts a file using AES (CBC mode) with the
         given key.
@@ -53,6 +54,7 @@ def encrypt_file(key, in_filename, chunksize=1024):
 
                 outfile.write(encryptor.encrypt(chunk))
 
+
 def decrypt_file(key, in_filename, chunksize=1024):
     """ Decrypts a file using AES (CBC mode) with the
         given key. Parameters are similar to encrypt_file,
@@ -84,6 +86,7 @@ def decrypt_file(key, in_filename, chunksize=1024):
                 outfile.write(decryptor.decrypt(chunk))
 
             outfile.truncate(origsize)
+
 
 def hash(in_filename):
     h = MD5.new()
