@@ -15,7 +15,8 @@ from SecureWitness import settings
 from django.db.models import Q
 
 
-def normalize_query(query_string, findterms=re.compile(r'"([^"]+)"|(\S+)').findall,normspace=re.compile(r'\s{2,}').sub):
+def normalize_query(query_string, findterms=re.compile(r'"([^"]+)"|(\S+)').findall,
+                    normspace=re.compile(r'\s{2,}').sub):
     return [normspace(' ', (t[0] or t[1]).strip()) for t in findterms(query_string)]
 
 
@@ -98,7 +99,7 @@ def register(request):
             send_mail(subject, message, from_email, to_list, fail_silently=True)
             # Create a folder for the user in the file system
             try:
-                os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
+                os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise e
@@ -122,7 +123,7 @@ def enable(request):
             password_str = request.POST.get('password', None)
             entered_user = User.objects.filter(username=user_str).first()
             regstr = Registration.objects.filter(user=entered_user, key=key_str).first()
-            currUser = authenticate(username=user_str,password=password_str)
+            currUser = authenticate(username=user_str, password=password_str)
             if currUser:
                 if regstr:
                     regstr.delete()
@@ -236,10 +237,29 @@ def suspend_user(request):
     else:
         form = GroupUserForm()
         # Option to remove only members belonging to the group
-        form.fields['user'].queryset = User.objects.all().exclude(
-            id__in=adminGroup.user_set.all().values_list('id', flat=True))
+        form.fields['user'].queryset = User.objects.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True)).exclude(is_active=False)
 
     return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser})
+
+@login_required
+def unsuspend_user(request):
+    currUser = request.user
+    adminGroup = Group.objects.filter(id=1).first()
+    if not is_admin(currUser):
+        return render(request, 'app/access_denied.html', {})
+
+    if request.method == 'POST':
+        userID = request.POST.get('user', None)
+        user = User.objects.filter(id=userID).first()
+        user.is_active = True
+        user.save()
+        return HttpResponseRedirect('/app/group/1/')
+    else:
+        form = GroupUserForm()
+        # Option to remove only members belonging to the group
+        form.fields['user'].queryset = User.objects.filter(is_active=False)
+
+    return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser, 'unsuspend': True})
 
 
 @login_required
@@ -287,12 +307,12 @@ def add_folder(request, user_name_slug):
             folder.save()
             # Create a corresponding folder in the file system
             try:
-                os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username,folder.name))
+                os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name))
             except OSError as e:
                 if e.errno != errno.EEXIST:
                     raise e
                 pass
-            return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
+            return HttpResponseRedirect('/app/user/' + user_name_slug + '/')
         else:
             print(form.errors)
     else:
@@ -602,7 +622,10 @@ def copy_report(request, user_name_slug, report_slug):
                 return HttpResponseRedirect('/app/user/' + user_name_slug + '/folder/' + folderSlug)
     else:
         form = CopyMoveReportForm()
-        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
+        if report.folder:
+            form.fields['dest'].queryset = Folder.objects.filter(user=currUser).exclude(id=report.folder.id)
+        else:
+            form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report})
 
@@ -662,7 +685,10 @@ def move_report(request, user_name_slug, report_slug):
 
     else:
         form = CopyMoveReportForm()
-        form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
+        if report.folder:
+            form.fields['dest'].queryset = Folder.objects.filter(user=currUser).exclude(id=report.folder.id)
+        else:
+            form.fields['dest'].queryset = Folder.objects.filter(user=currUser)
 
     return render(request, 'app/copymove_report.html', {'form': form, 'user': currUser, 'report': report, 'move': True})
 

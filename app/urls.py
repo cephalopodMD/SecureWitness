@@ -54,5 +54,6 @@ urlpatterns = patterns('',
                            name='confirm request'),
                        url(r'^request/(?P<request_id>[\w\-]+)/delete/$', views.delete_request, name='delete request'),
                        url(r'^suspend-user/$', views.suspend_user, name='suspend user'),
+                       url(r'^reinstate-user/$', views.unsuspend_user, name='unsuspend user'),
                        url(r'^enable/$', views.enable, name='enable'),
 )
