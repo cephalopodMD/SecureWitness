@@ -1,6 +1,7 @@
 import os, re, string, random
 from django.core.files import File
 from django.shortcuts import render
+import errno
 from app.encryption import encrypt_file, hash
 from app.forms import *
 from app.models import *
@@ -96,7 +97,12 @@ def register(request):
             to_list = [currUser.email, settings.EMAIL_HOST_USER]
             send_mail(subject, message, from_email, to_list, fail_silently=True)
             # Create a folder for the user in the file system
-            os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username))
+            try:
+                os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise e
+                pass
             # Redirect the user to the enable page
             return HttpResponseRedirect('/app/enable/')
         else:
@@ -271,8 +277,13 @@ def add_folder(request, user_name_slug):
             folder.user = currUser
             folder.save()
             # Create a corresponding folder in the file system
-            os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name))
-            return HttpResponseRedirect('/app/user/' + user_name_slug + '/')
+            try:
+                os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username,folder.name))
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise e
+                pass
+            return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
         else:
             print(form.errors)
     else:
