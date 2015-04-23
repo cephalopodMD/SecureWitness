@@ -62,29 +62,29 @@
         </div>
     </nav>
 
-    <p>Search for Reports</p>
-    <form id="search_form" method="post" action="/app/search/">
+    <h1 style="text-align:center">Public Reports</h1>
+    <form style="text-align:center" id="search_form" method="post" action="/app/search/">
         {% csrf_token %}
         <input type="text" name="search" value="" size="50"/> <input type="submit" value="Search"/>
     </form>
-    <p><a href="/app/search/">Advanced Search</a></p>
+    <p style="text-align:center"><a href="/app/search/">Advanced Search</a></p>
 
     {% if reports %}
 
-        <ul>
-            {% for report in reports %}
-                <li>
-                    <p>{{ report.shortDesc }}</p>
 
-                    <p>
-                        <a href="/app/report/{{ report.id }}/">View Report</a>
-                        {% if admin %}
-                            | <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
-                        {% endif %}
-                    </p>
-                </li>
-            {% endfor %}
-        </ul>
+        {% for report in reports %}
+                <div class="row">
+                    <div class="col-sm-6 col-md-12" style="background-color:lavender;">
+                        <h4 style="text-align:center">{{ report.shortDesc }}</h4>
+                        <p style="text-align:center">
+                            <a href="/app/report/{{report.id }}/">View Report</a>
+                            {% if admin %}
+                                | <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div> </br>
+        {% endfor %}
     {% else %}
         <p><strong>There are no matching reports currently in the database</strong></p>
     {% endif %}
