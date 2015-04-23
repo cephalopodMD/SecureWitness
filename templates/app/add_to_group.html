@@ -59,13 +59,13 @@
 </nav>
 <body>
 {% if add %}
-    <h1>Add user to group</h1>
+    <h1 style="text-align: center">Add user to group</h1>
 {% else %}
-    <h1>Remove user from group</h1>
+    <h1 style="text-align: center">Remove user from group</h1>
 {% endif %}
 
 <!-- This line determines whether to call the add_report or edit_report view -->
-<form id="group_form" method="post" action=""/>
+<form style="text-align: center" id="group_form" method="post" action=""/>
 
 {% csrf_token %}
 {% for hidden in form.hidden_fields %}

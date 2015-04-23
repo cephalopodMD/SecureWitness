@@ -59,34 +59,40 @@
 </nav>
 <body>
 <!-- Displays the user's username as a header -->
-<h1>User: {{ user.username }} > {{ folder.name }}</h1>
+<h1 style="text-align: center">User: {{ user.username }} - {{ folder.name }}</h1>
 
-<p>
+<p style="text-align: center">
     <a href="/app/user/{{ user.username }}/folder/{{ folder.slug }}/add_report/">File a New Report</a>
 </p>
 {% if reports %}
-    <ul>
-        {% for report in reports %}
-            <li>
-                <p>{{ report.shortDesc }}</p>
-                <a href="/app/report/{{ report.id }}/">View Report</a>
-                |
-                <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
-                |
-                <a href="/app/user/{{ user.username }}/report/{{ report.id }}/copy">Copy report</a>
-                |
-                <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
-                |
-                <a href="/app/user/{{ user.username }}/report/{{ report.id }}/share">Share report</a>
-                |
-                <a href="/app/report/{{ report.id }}/files">Attach Files</a>
-                |
-                <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
-            </li>
-        {% endfor %}
-    </ul>
+    {% for report in reports %}
+        <div class="row">
+            <div class="col-sm-6 col-md-12" style="background-color:lavender;">
+                <h4 style="text-align:center">{{ report.shortDesc }}</h4>
+
+                <p style="text-align:center">
+                    <a href="/app/report/{{ report.id }}/">View Report</a>
+                    |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/share">Share report</a>
+                    |
+                    <a href="/app/report/{{ report.id }}/files">Attach Files</a>
+                </p>
+
+                <p style="text-align: center">
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/edit">Edit report</a>
+                    |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/copy">Copy report</a>
+                    |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/move">Move report</a>
+                    |
+                    <a href="/app/user/{{ user.username }}/report/{{ report.id }}/delete">Delete report</a>
+                </p>
+            </div>
+        </div> </br>
+    {% endfor %}
 {% else %}
     <p><strong>There are no reports in this folder.</strong></p>
 {% endif %}
+
 </body>
 </html>

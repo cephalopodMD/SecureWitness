@@ -59,12 +59,12 @@
 </nav>
 <body>
 {% if move %}
-    <h1>Move Report</h1>
+    <h1 style="text-align: center">Move Report</h1>
 {% else %}
-    <h1>Copy Report</h1>
+    <h1 style="text-align: center">Copy Report</h1>
 {% endif %}
 
-<form id="folder_form" method="post" {% if move %}
+<form style="text-align: center" id="folder_form" method="post" {% if move %}
       action="/app/user/{{ user.username }}/report/{{ report.id }}/move/" {% else %}
       action="/app/user/{{ user.username }}/report/{{ report.id }}/copy/" {% endif %}/>
 

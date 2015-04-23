@@ -520,9 +520,9 @@ def copy_report(request, user_name_slug, report_slug):
         dest = request.POST.get('dest', None)
         if dest:
             # User entered a folder name
-            if report.folder and report.folder.name == dest:
+            if report.folder and str(report.folder.id) == str(dest):
                 # Destination = current location
-                return HttpResponse("This report already exists in the given location")
+                return render(request, 'app/access_denied.html', {})
             else:
                 wasInFolder = False
                 if report.folder:
@@ -735,16 +735,17 @@ def search(request):
         reports = Report.objects.all()
         if not is_admin(request.user):
             reports = reports.filter(private=False)
-        basic_text = request.POST.get('search')
-        if basic_text:
+        basic_text = request.POST.get('search', None)
+        short = request.POST.get('shortDesc', None)
+        if basic_text or (basic_text == "" and not short):
+            if basic_text == "":
+                return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
             # POST request from basic search
             entry_query = get_query(basic_text, ['shortDesc', 'detailedDesc', 'keywords',])
             reports = reports.filter(entry_query)
             return render(request, 'app/home.html', {'reports': reports, 'admin': is_admin(request.user)})
         else:
-            print(request.POST)
             # POST request from advanced search
-            short = request.POST.get('shortDesc', None)
             if short:
                 entry_query = get_query(short, ['shortDesc',])
                 reports = reports.filter(entry_query)
@@ -800,17 +801,6 @@ def group_request(request):
         form.fields['group'].queryset = Group.objects.exclude(id__in=request.user.groups.all().values_list('id', flat=True))
 
     return render(request, 'app/request.html', {'form': form})
-
-@login_required
-def view_group_requests(request):
-
-    currUser = request.user
-    if not is_admin(currUser):
-        return render(request, 'app/access_denied.html', {})
-    # Get info about all group requests
-    group_requests = UserGroupRequest.objects.all()
-
-    return render(request, 'app/view_requests.html', {'user': currUser, 'requests': group_requests})
 
 @login_required
 def confirm_request(request, request_id):

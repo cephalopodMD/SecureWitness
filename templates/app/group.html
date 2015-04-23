@@ -59,57 +59,62 @@
 </nav>
 <body>
 <!-- Displays the user's username as a header -->
-<h1>Group: {{ group.name }}</h1>
+<h1 style="text-align: center">Group: {{ group.name }}</h1>
 
 {% if admin %}
-    <p>
+    <p style="text-align: center">
         <a href="/app/suspend-user/">Suspend a User</a>
         |
         <a href="/app/add_group/">Create a new group</a>
         |
         <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
     </p>
-    <p><strong>Group Requests</strong></p>
     {% if requests %}
-        <ul>
-            {% for request in requests %}
-                <li>
-                    <p>User: {{ request.user }}</p>
+        <h4 style="text-align: center"><strong>Group Requests</strong></h4>
+        {% for request in requests %}
+            <div class="row">
+                <div class="col-sm-6 col-md-12" style="background-color:lavender;">
+                    <p style="text-align: center"><strong>User: </strong>{{ request.user }} |
+                        <strong>Group: </strong>{{ request.group }}</p>
 
-                    <p>Group: {{ request.group }}</p>
+                    <p style="text-align:center">{{ request.text }}</p>
 
-                    <p>Reason: {{ request.text }}</p>
-
-                    <p><a href="/app/request/{{ request.id }}/confirm">Confirm</a> | <a
-                            href="/app/request/{{ request.id }}/delete">Delete Request</a></p>
-                </li>
-            {% endfor %}
-        </ul>
+                    <p style="text-align: center">
+                        <a href="/app/request/{{ request.id }}/confirm">Confirm</a>
+                        |
+                        <a href="/app/request/{{ request.id }}/delete">Delete Request</a>
+                    </p>
+                </div>
+            </div> </br>
+        {% endfor %}
     {% else %}
-        <p>There are no group requests at this time</p>
+        <p style="text-align: center"><strong>There are no group requests at this time.</strong></p>
     {% endif %}
 {% else %}
-    <p>
+    <p style="text-align: center">
         <a href="/app/group/{{ group.id }}/add_to_group/">Add a user to this group</a>
         |
         <a href="/app/group/{{ group.id }}/remove_from_group/">Remove a user from this group</a>
     </p>
     {% if reports %}
-        <p><strong>Reports</strong></p>
-        <ul>
-            {% for report in reports %}
-                <li>
-                    <p>{{ report.shortDesc }}</p>
-                    <a href="/app/report/{{ report.id }}/">View Report</a>
-                    {% if report.user == user %}
-                        |
-                        <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove/">Remove from Group</a>
-                    {% endif %}
-                </li>
-            {% endfor %}
-        </ul>
+        <h4 style="text-align: center"><strong>Reports</strong></h4>
+        {% for report in reports %}
+            <div class="row">
+                <div class="col-sm-6 col-md-12" style="background-color:lavender;">
+                    <h4 style="text-align:center">{{ report.shortDesc }}</h4>
+
+                    <p style="text-align:center">
+                        <a href="/app/report/{{ report.id }}/">View Report</a>
+                        {% if report.user == user %}
+                            |
+                            <a href="/app/group/{{ group.id }}/report/{{ report.id }}/remove/">Remove from Group</a>
+                        {% endif %}
+                    </p>
+                </div>
+            </div> </br>
+        {% endfor %}
     {% else %}
-        <p><strong>This group doesn't contain any reports.</strong></p>
+        <p style="text-align: center"><strong>This group doesn't contain any reports.</strong></p>
     {% endif %}
 {% endif %}
 </body>

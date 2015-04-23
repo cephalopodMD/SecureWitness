@@ -58,9 +58,9 @@
     </div>
 </nav>
 <body>
-<h1>Search Reports</h1>
+<h1 style="text-align: center">Search Reports</h1>
 
-<form id="search_form" method="post" action="/app/search/"/>
+<form style="text-align: center"id="search_form" method="post" action="/app/search/"/>
 
 {% csrf_token %}
 {% for hidden in form.hidden_fields %}
@@ -74,7 +74,7 @@
     <br/>
 {% endfor %}
 
-<input type="submit" value="Search"/>
+</br><input type="submit" value="Search"/>
 <button type="button" onclick="window.location = '/app/'">Cancel</button>
 </form>
 </body>

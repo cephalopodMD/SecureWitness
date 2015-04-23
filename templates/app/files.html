@@ -58,9 +58,10 @@
     </div>
 </nav>
 <body>
-<h1>Attach a File</h1>
+<h1 style="text-align: center">Attach a File</h1>
 
-<form id="file_form" method="post" action="/app/report/{{ report.id }}/files/" enctype="multipart/form-data"/>
+<form style="text-align: center" id="file_form" method="post" action="/app/report/{{ report.id }}/files/"
+      enctype="multipart/form-data"/>
 {% csrf_token %}
 {% for hidden in form.hidden_fields %}
     {{ hidden }}

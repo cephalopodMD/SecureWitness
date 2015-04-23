@@ -58,9 +58,9 @@
     </div>
 </nav>
 <body>
-<h1>Request Group Access</h1>
+<h1 style="text-align: center">Request Group Access</h1>
 
-<form id="group_request_form" method="post" action="/app/request-group-access/"/>
+<form style="text-align: center" id="group_request_form" method="post" action="/app/request-group-access/"/>
 
 {% csrf_token %}
 {% for hidden in form.hidden_fields %}
@@ -68,6 +68,7 @@
 {% endfor %}
 
 {% for field in form.visible_fields %}
+    </br>
     {{ field.errors }}
     {{ field.help_text }}
     {{ field }}

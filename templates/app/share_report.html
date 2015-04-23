@@ -58,9 +58,9 @@
     </div>
 </nav>
 <body>
-<h1>Share Report</h1>
+<h1 style="text-align: center">Share Report</h1>
 
-<form id="group_form" method="post" action="/app/user/{{ user.username }}/report/{{ report.id }}/share/"/>
+<form style="text-align: center" id="group_form" method="post" action="/app/user/{{ user.username }}/report/{{ report.id }}/share/"/>
 
 {% csrf_token %}
 {% for hidden in form.hidden_fields %}
