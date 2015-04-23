@@ -96,7 +96,7 @@ def register(request):
             try:
                 os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username))
             except OSError as e:
-                if e.errno != errno.EEXIST:
+                if e.errno not in [17,2]:
                     raise e
                 pass
             # Redirect the user to the enable page
@@ -273,7 +273,7 @@ def add_folder(request, user_name_slug):
             try:
                 os.mkdir(os.path.join(settings.MEDIA_ROOT,currUser.username,folder.name))
             except OSError as e:
-                if e.errno != errno.EEXIST:
+                if e.errno not in [17,2]:
                     raise e
                 pass
             return HttpResponseRedirect('/app/user/'+user_name_slug+'/')
