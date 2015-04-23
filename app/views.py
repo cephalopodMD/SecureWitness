@@ -161,7 +161,7 @@ def change_password(request, user_name_slug):
 
     currUser = request.user
     if currUser.username != user_name_slug:
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == "POST":
         form = ChangePasswordForm(request.POST)
@@ -189,7 +189,7 @@ def delete_account(request, user_name_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser,user_name_slug):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Set the user's account to inactive
     currUser.is_active = False
@@ -204,7 +204,7 @@ def suspend_user(request):
     currUser = request.user
     adminGroup = Group.objects.filter(id=1).first()
     if not is_admin(currUser):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         userID = request.POST.get('user', None)
@@ -225,7 +225,7 @@ def user(request, user_name_slug):
     # Validate that the user has access
     currUser = request.user
     if currUser.username != user_name_slug:
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Retrieve all of the user's reports that are not stored in folders
     reports = Report.objects.filter(user=currUser, folder=None)
@@ -240,7 +240,7 @@ def folder(request, user_name_slug, folder_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser,user_name_slug):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Retrieve all of the user's reports that are stored in the given folder
     folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
@@ -254,7 +254,7 @@ def add_folder(request, user_name_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser,user_name_slug):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         form = FolderForm(request.POST)
@@ -279,7 +279,7 @@ def delete_folder(request, user_name_slug, folder_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser,user_name_slug):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Obtain information about the folder and reports
     folder = Folder.objects.filter(user=currUser, slug=folder_slug).first()
@@ -302,7 +302,7 @@ def group(request, group_id):
     currUser = request.user
     # User does not belong to the group
     if not currUser.groups.filter(id=group_id).exists():
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Retrieve reports shared with the group
     currGroup = Group.objects.filter(id=group_id).first()
@@ -317,7 +317,7 @@ def add_group(request):
     # Validate that the user has access
     currUser = request.user
     if not currUser.groups.filter(id=1).exists():
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         form = GroupForm(request.POST)
@@ -342,7 +342,7 @@ def add_to_group(request, group_id):
     # Validate that the user has access - any member can add a new member
     currUser = request.user
     if not currUser.groups.filter(id=group_id).exists():
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Get information about the current group
     group = Group.objects.filter(id=group_id).first()
@@ -370,7 +370,7 @@ def remove_from_group(request, group_id):
     # Validate that the user has access - an admin can remove a member
     currUser = request.user
     if not currUser.groups.filter(id=1).exists():
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Get information about the current group
     group = Group.objects.filter(id=group_id).first()
@@ -398,7 +398,7 @@ def share_report(request, user_name_slug, report_slug):
     # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         dest = request.POST.get('dest', None)
@@ -422,7 +422,7 @@ def remove_report(request, group_id, report_slug):
     # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     currGroup = Group.objects.filter(id=group_id).first()
 
@@ -437,7 +437,7 @@ def report(request, report_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser, None, None, report_slug):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Obtain information about the specified report
     report = Report.objects.filter(id=report_slug).first()
@@ -452,7 +452,7 @@ def add_report(request, user_name_slug, folder_slug=None):
     # Validate that the user has access
     currUser = request.user
     if currUser.username != user_name_slug:
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         form = ReportForm(request.POST)
@@ -484,7 +484,7 @@ def edit_report(request, user_name_slug, report_slug=None):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser, user_name_slug, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     report = Report.objects.filter(id=report_slug).first()
 
@@ -514,7 +514,7 @@ def copy_report(request, user_name_slug, report_slug):
     # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         dest = request.POST.get('dest', None)
@@ -583,7 +583,7 @@ def move_report(request, user_name_slug, report_slug):
     # Check if the report does not belong to the current user
     if currUser != report.user:
         # Tell the user that the page is restricted
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     if request.method == 'POST':
         dest = request.POST.get('dest', None)
@@ -640,7 +640,7 @@ def delete_report(request, user_name_slug, report_slug):
     currUser = request.user
     report = Report.objects.filter(id=report_slug).first()
     if report.user != currUser and not is_admin(currUser):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Access information about the given report
     files = Attachment.objects.filter(report=report)
@@ -662,7 +662,7 @@ def add_file(request, report_slug=None):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser, None, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     report = Report.objects.filter(id=report_slug).first()
 
@@ -711,7 +711,7 @@ def delete_file(request, report_slug, file_slug):
     # Validate that the user has access
     currUser = request.user
     if not hasAccess(currUser, None, None, report_slug, True):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     # Access information about the given file
     file = Attachment.objects.filter(id=file_slug).first()
@@ -806,7 +806,7 @@ def view_group_requests(request):
 
     currUser = request.user
     if not is_admin(currUser):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
     # Get info about all group requests
     group_requests = UserGroupRequest.objects.all()
 
@@ -817,7 +817,7 @@ def confirm_request(request, request_id):
 
     currUser = request.user
     if not is_admin(currUser):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
 
@@ -836,7 +836,7 @@ def delete_request(request, request_id):
 
     currUser = request.user
     if not is_admin(currUser):
-        return HttpResponse("You are not authorized to view this page")
+        return render(request, 'app/access_denied.html', {})
 
     groupRequest = UserGroupRequest.objects.filter(id=request_id).first()
     groupRequest.delete()
