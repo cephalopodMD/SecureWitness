@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User, Group
-from app.models import Report, Attachment, Folder, UserGroupRequest, Registration
+from app.models import Report, Attachment, Folder, UserGroupRequest, Registration, Comment
 from django.forms.extras.widgets import SelectDateWidget
 
 YEAR_CHOICES = ()
@@ -15,6 +15,10 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ('username', 'email', 'password')
 
+class CommentForm(forms.ModelForm):
+    class Meta:
+        model = Comment
+        fields = ('text',)
 
 class FolderForm(forms.ModelForm):
     class Meta:

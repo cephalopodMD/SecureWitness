@@ -498,9 +498,23 @@ def report(request, report_slug):
     # Obtain information about the specified report
     report = Report.objects.filter(id=report_slug).first()
     files = Attachment.objects.filter(report=report)
+    comments = Comment.objects.filter(report=report)
 
-    """ *** This passes in the current user --> Not the report's creator *** """
-    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files})
+    if request.method == 'POST':
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            # Set fields not specified by the form
+            comment.user = currUser
+            comment.report = report
+            comment.save()
+        else:
+            print(form.errors)
+    else:
+        form = CommentForm()
+
+
+    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files, 'form': form, 'comments': comments})
 
 
 @login_required
