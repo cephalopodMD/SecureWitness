@@ -41,8 +41,8 @@ def get_query(query_string, search_fields):
     return query
 
 def report_group(currUser, report):
-    for g1 in currUser.groups:
-        for g2 in report.groups:
+    for g1 in list(currUser.groups):
+        for g2 in list(report.groups):
             if g1 == g2:
                 return True
     return False
@@ -54,7 +54,7 @@ def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None,
         report = Report.objects.filter(id=report_slug).first()
         if not report:
             return False
-        if report.private and report.user != currUser and not report_group(currUser, report):
+        if report.private and report.user != currUser and not is_admin(currUser) and not report_group(currUser, report):
             return False
         if edit and report.user != currUser:
             return False
@@ -279,6 +279,9 @@ def user(request, user_name_slug):
     reports = Report.objects.filter(user=currUser, folder=None)
     # Retrieve all of the user's folders
     folders = Folder.objects.filter(user=currUser)
+
+    if request
+
 
     return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
 
