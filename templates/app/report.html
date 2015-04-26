@@ -109,7 +109,7 @@
 
 {% if comments %}
     {% for comment in comments %}
-        <p><strong>{{ comment.user.name }} said:</strong>{{ comment.text }}</p>
+        <p><strong>{{ comment.user.username }} said:</strong>{{ comment.text }}</p>
     {% endfor %}
 {% endif %}
 </form>
