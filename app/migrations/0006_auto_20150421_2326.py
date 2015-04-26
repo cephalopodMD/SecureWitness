@@ -6,7 +6,6 @@ from django.conf import settings
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('app', '0005_registration'),
     ]

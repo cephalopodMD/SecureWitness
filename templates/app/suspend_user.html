@@ -58,7 +58,12 @@
     </div>
 </nav>
 <body>
-<h1 style="text-align: center">Suspend User</h1>
+
+{% if unsuspend %}
+    <h1 style="text-align: center">Reinstate User</h1>
+{% else %}
+    <h1 style="text-align: center">Suspend User</h1>
+{% endif %}
 
 <form style="text-align: center" id="group_form" method="post" action=""/>
 
@@ -74,7 +79,12 @@
     <br/>
 {% endfor %}
 
-<br/><input type="submit" value="Suspend"/>
+<br/>
+{% if unsuspend %}
+    <input type="submit" value="Reinstate"/>
+{% else %}
+    <input type="submit" value="Suspend"/>
+{% endif %}
 <button type="button" onclick="window.location = '/app/group/1/'">Cancel</button>
 </form>
 </body>
