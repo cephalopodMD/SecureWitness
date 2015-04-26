@@ -590,6 +590,7 @@ def copy_report(request, user_name_slug, report_slug):
                     new_file.user = currUser
                     new_file.report = newReport
                     new_file.encrypted = old_file.encrypted
+                    new_file.hash = old_file.hash
                     new_file.file = File(old_file.file,
                                          os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name,
                                                       os.path.split(old_file.file.name)[1]))
@@ -705,10 +706,14 @@ def delete_report(request, user_name_slug, report_slug):
     files = Attachment.objects.filter(report=report)
 
     for file in files:
-        # Remove the file from memory
-        os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
-        # Remove the file from the database
-        file.delete()
+        if (file.folder):
+            # Remove the file from memory
+            os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.folder), str(fiie.file)))
+        else:
+            # Remove the file from memory
+            os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
+    # Remove the file from the database
+    file.delete()
     # Remove the report from the database
     report.delete()
 
