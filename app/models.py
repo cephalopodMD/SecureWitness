@@ -62,3 +62,7 @@ class Attachment(models.Model):
 class Registration(models.Model):
     user = models.ForeignKey(User, help_text="Username")
     key = models.CharField(max_length=128, blank=True, help_text="Code")
+
+class Comment(models.Model):
+    user = models.ForeignKey(User)
+    text = models.CharField(max_length=500, help_text="Comment")

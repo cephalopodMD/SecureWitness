@@ -40,6 +40,12 @@ def get_query(query_string, search_fields):
             query = query & or_query
     return query
 
+def report_group(currUser, report):
+    for g1 in currUser.groups:
+        for g2 in report.groups:
+            if g1 == g2:
+                return True
+    return False
 
 def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
     if user_name_slug and currUser.username != user_name_slug:
@@ -48,7 +54,7 @@ def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None,
         report = Report.objects.filter(id=report_slug).first()
         if not report:
             return False
-        if report.private and report.user != currUser:
+        if report.private and report.user != currUser and not report_group(currUser, report):
             return False
         if edit and report.user != currUser:
             return False
