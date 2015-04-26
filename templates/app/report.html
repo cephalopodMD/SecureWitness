@@ -58,6 +58,8 @@
     </div>
 </nav>
 <body>
+<div class="container">
+
 <h1>Reported by {{ report.user.username }} on {{ report.timeCreated }}</h1>
 
 <p><strong>Short description:</strong> {{ report.shortDesc }}</p>
@@ -107,12 +109,12 @@
 
 {% if comments %}
     {% for comment in comments %}
-        <p>{{ comment.text }}</p>
+        <p><strong>{{ comment.user.name }} said:</strong>{{ comment.text }}</p>
     {% endfor %}
 {% endif %}
 </form>
 
-
+</div>
 </body>
 
 </html>
