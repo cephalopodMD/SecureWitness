@@ -65,4 +65,5 @@ class Registration(models.Model):
 
 class Comment(models.Model):
     user = models.ForeignKey(User)
+    report = models.ForeignKey(Report)
     text = models.CharField(max_length=500, help_text="Comment")

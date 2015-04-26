@@ -85,6 +85,34 @@
         <br/>
     {% endfor %}
 {% endif %}
+
+<p><strong>Comments</strong></p>
+
+<form id="comment_form" method="post" action="/app/report/{{ report.id }}/"/>
+
+{% csrf_token %}
+{% for hidden in form.hidden_fields %}
+    {{ hidden }}
+{% endfor %}
+
+{% for field in form.visible_fields %}
+    </br>
+    {{ field.errors }}
+    {{ field.help_text }}
+    {{ field }}
+    <br/>
+{% endfor %}
+
+<input type="submit" value="Add"/>
+
+{% if comments %}
+    {% for comment in comments %}
+        <p>{{ comment.text }}</p>
+    {% endfor %}
+{% endif %}
+</form>
+
+
 </body>
 
 </html>
