@@ -41,8 +41,8 @@ def get_query(query_string, search_fields):
     return query
 
 def report_group(currUser, report):
-    for g1 in list(currUser.groups):
-        for g2 in list(report.groups):
+    for g1 in list(currUser.groups.all()):
+        for g2 in list(report.groups.all()):
             if g1 == g2:
                 return True
     return False
@@ -279,9 +279,6 @@ def user(request, user_name_slug):
     reports = Report.objects.filter(user=currUser, folder=None)
     # Retrieve all of the user's folders
     folders = Folder.objects.filter(user=currUser)
-
-    if request
-
 
     return render(request, 'app/user.html', {'user': currUser, 'reports': reports, 'folders': folders})
 
