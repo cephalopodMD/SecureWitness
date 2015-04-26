@@ -724,7 +724,10 @@ def delete_report(request, user_name_slug, report_slug):
 
     # Access information about the given report
     files = Attachment.objects.filter(report=report)
+    comments = Comment.objects.filter(report=report)
 
+    for comment in comments:
+        comment.delete()
     for file in files:
         if (file.folder):
             # Remove the file from memory
