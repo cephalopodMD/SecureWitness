@@ -728,6 +728,7 @@ def delete_report(request, user_name_slug, report_slug):
 
     for comment in comments:
         comment.delete()
+
     for file in files:
         if (file.folder):
             # Remove the file from memory
@@ -737,8 +738,9 @@ def delete_report(request, user_name_slug, report_slug):
             os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
         # Remove the file from the database
         file.delete()
-        # Remove the report from the database
-        report.delete()
+
+    # Remove the report from the database
+    report.delete()
 
     # Redirect the user to the appropriate page
     return HttpResponseRedirect(request.META.get('HTTP_REFERER'))
