@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 from django.db import models, migrations
-from django.conf import settings
 import app.models
+from django.conf import settings
 
 
 class Migration(migrations.Migration):
@@ -16,9 +16,20 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Attachment',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
                 ('file', models.FileField(upload_to=app.models.get_upload_path)),
                 ('encrypted', models.BooleanField(default=False)),
+                ('hash', models.CharField(max_length=128, blank=True)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='Comment',
+            fields=[
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
+                ('text', models.CharField(max_length=500, help_text='Comment')),
             ],
             options={
             },
@@ -27,8 +38,8 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Folder',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(help_text='Folder Name', max_length=128)),
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
+                ('name', models.CharField(max_length=128, help_text='Folder Name')),
                 ('slug', models.SlugField()),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
@@ -37,23 +48,58 @@ class Migration(migrations.Migration):
             bases=(models.Model,),
         ),
         migrations.CreateModel(
+            name='Registration',
+            fields=[
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
+                ('key', models.CharField(max_length=128, help_text='Code', blank=True)),
+                ('user', models.ForeignKey(help_text='Username', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.CreateModel(
             name='Report',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
                 ('timeCreated', models.DateTimeField(verbose_name='Time created')),
-                ('shortDesc', models.CharField(help_text='Short description', max_length=128)),
+                ('shortDesc', models.CharField(max_length=128, help_text='Short description')),
                 ('detailedDesc', models.TextField(help_text='Detailed description')),
-                ('location', models.CharField(help_text='Location (optional)', blank=True, max_length=128)),
-                ('dateOfIncident', models.DateField(null=True, blank=True, help_text='Date of incident (optional)')),
-                ('keywords', models.CharField(help_text='Keywords (optional)', blank=True, max_length=128)),
+                ('location', models.CharField(max_length=128, help_text='Location (optional)', blank=True)),
+                ('dateOfIncident', models.DateField(help_text='Date of incident (optional)', blank=True, null=True)),
+                ('keywords', models.CharField(max_length=128, help_text='Keywords (optional)', blank=True)),
                 ('private', models.BooleanField(default=False, help_text='Private')),
-                ('folder', models.ForeignKey(default=None, blank=True, to='app.Folder', null=True)),
-                ('groups', models.ManyToManyField(null=True, default=None, blank=True, to='auth.Group')),
+                ('folder', models.ForeignKey(default=None, null=True, to='app.Folder', blank=True)),
+                ('groups', models.ManyToManyField(default=None, blank=True, null=True, to='auth.Group')),
                 ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
             ],
             options={
             },
             bases=(models.Model,),
+        ),
+        migrations.CreateModel(
+            name='UserGroupRequest',
+            fields=[
+                ('id', models.AutoField(serialize=False, verbose_name='ID', primary_key=True, auto_created=True)),
+                ('text', models.TextField(help_text='Reason', blank=True)),
+                ('group', models.ForeignKey(help_text='Group', to='auth.Group')),
+                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+            },
+            bases=(models.Model,),
+        ),
+        migrations.AddField(
+            model_name='comment',
+            name='report',
+            field=models.ForeignKey(to='app.Report'),
+            preserve_default=True,
+        ),
+        migrations.AddField(
+            model_name='comment',
+            name='user',
+            field=models.ForeignKey(to=settings.AUTH_USER_MODEL),
+            preserve_default=True,
         ),
         migrations.AddField(
             model_name='attachment',

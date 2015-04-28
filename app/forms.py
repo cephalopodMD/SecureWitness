@@ -15,10 +15,12 @@ class UserForm(forms.ModelForm):
         model = User
         fields = ('username', 'email', 'password')
 
+
 class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ('text',)
+
 
 class FolderForm(forms.ModelForm):
     class Meta:

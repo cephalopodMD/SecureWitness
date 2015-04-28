@@ -40,12 +40,14 @@ def get_query(query_string, search_fields):
             query = query & or_query
     return query
 
+
 def report_group(currUser, report):
     for g1 in list(currUser.groups.all()):
         for g2 in list(report.groups.all()):
             if g1 == g2:
                 return True
     return False
+
 
 def hasAccess(currUser, user_name_slug=None, folder_slug=None, report_slug=None, edit=False):
     if user_name_slug and currUser.username != user_name_slug:
@@ -107,7 +109,7 @@ def register(request):
             try:
                 os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username))
             except OSError as e:
-                if e.errno not in [17,2]:
+                if e.errno not in [17, 2]:
                     raise e
                 pass
             # Redirect the user to the enable page
@@ -243,9 +245,11 @@ def suspend_user(request):
     else:
         form = GroupUserForm()
         # Option to remove only members belonging to the group
-        form.fields['user'].queryset = User.objects.all().exclude(id__in=adminGroup.user_set.all().values_list('id', flat=True)).exclude(is_active=False)
+        form.fields['user'].queryset = User.objects.all().exclude(
+            id__in=adminGroup.user_set.all().values_list('id', flat=True)).exclude(is_active=False)
 
     return render(request, 'app/suspend_user.html', {'form': form, 'user': currUser})
+
 
 @login_required
 def unsuspend_user(request):
@@ -315,7 +319,7 @@ def add_folder(request, user_name_slug):
             try:
                 os.mkdir(os.path.join(settings.MEDIA_ROOT, currUser.username, folder.name))
             except OSError as e:
-                if e.errno not in [17,2]:
+                if e.errno not in [17, 2]:
                     raise e
                 pass
             return HttpResponseRedirect('/app/user/' + user_name_slug + '/')
@@ -513,8 +517,8 @@ def report(request, report_slug):
     else:
         form = CommentForm()
 
-
-    return render(request, 'app/report.html', {'user': currUser, 'report': report, 'files': files, 'form': form, 'comments': comments})
+    return render(request, 'app/report.html',
+                  {'user': currUser, 'report': report, 'files': files, 'form': form, 'comments': comments})
 
 
 @login_required
@@ -730,9 +734,9 @@ def delete_report(request, user_name_slug, report_slug):
         comment.delete()
 
     for file in files:
-        if (file.folder):
+        if (file.report.folder):
             # Remove the file from memory
-            os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.folder), str(file.file)))
+            os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.report.folder), str(file.file)))
         else:
             # Remove the file from memory
             os.remove(os.path.join(settings.MEDIA_ROOT, currUser.username, str(file.file)))
